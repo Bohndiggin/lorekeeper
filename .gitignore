@@ -1,2 +1,5 @@
 ignore/
 venv/
+server/.env
+db/
+client_python/.env
