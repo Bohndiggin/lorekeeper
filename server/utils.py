@@ -26,7 +26,7 @@ def make_curs_and_query(query:str, conn:pg.extensions.connection) -> dict:
 def make_curs_query_commit(query:str, conn:pg.extensions.connection):
     curs = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
-        yield curs.execute(query)
+        yield curs.execute(query) # should yield .fetchall
     except Exception as e:
         yield e
     finally:
