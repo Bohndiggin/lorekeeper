@@ -8,3 +8,5 @@ db/D_D.opml
 db/seed.py
 db/utils.py
 db/db_test.py
+node_modules/
+client_fvtt/dmdms/.env

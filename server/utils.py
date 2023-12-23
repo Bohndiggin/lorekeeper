@@ -84,7 +84,7 @@ def multi_tri_query(left_table:str, left_table_id:str, table_M_R_list_w_id:list,
     return answer_dict
 
 def single_item_full_multi_query(table:str, id:int, dual_query_list:list, table_id:str, middle_right_query_list:list, conn:pg.extensions.connection) -> dict:
-    """Function finds everything associated with a single item"""
+    """Function finds everything associated with a single item and returns a dictionary"""
     answer = {}
 
     overview_query = single_item_table_query(table, id)
