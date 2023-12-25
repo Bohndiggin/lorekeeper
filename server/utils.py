@@ -214,10 +214,12 @@ object_table = InteractableTable(
         ['involved_history_object', 'object_id']
     ],
     [
-        ['involved_history_object', 'historical_fragments', 'historical_fragment_id']
+        ['involved_history_object', 'historical_fragments', 'historical_fragment_id'],
+        ['object_to_owner', 'actor', 'actor_id']
     ]
     )
 involved_history_object_table = Pg_Table('involved_history_object')
+object_to_owner_table = Pg_Table('object_to_owner')
 world_data_table = InteractableTable(
     'world_data',
     'world_data_id',
