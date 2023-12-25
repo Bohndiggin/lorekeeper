@@ -47,17 +47,17 @@ def single_item_table_query(table_name:str, id:int) -> str:
     """
     return query
 
-def make_query_two_tables(table_1:str, table_2:str, table_2_id:str, id:int) -> str:
+def make_query_two_tables(table_1:str, table_2:str, table_2_id:str, id:int, table_1_id:str='id') -> str:
     query = f"""
-        SELECT x.id, y.* FROM {table_1} x
-        JOIN {table_2} y ON x.id = y.{table_2_id}
+        SELECT x.{table_1_id}, y.* FROM {table_1} x
+        JOIN {table_2} y ON x.{table_1_id} = y.{table_2_id}
         WHERE x.id = {id};
     """
     return query
 
 def make_query_three_tables(middle_table:str, left_table:str, right_table:str, left_table_id:str, right_table_id:str, id:int) -> str:
     query = f"""
-        SELECT * FROM {middle_table} x
+        SELECT z.*, x.* FROM {middle_table} x
         JOIN {left_table} y ON x.{left_table_id} = y.id
         JOIN {right_table} z ON x.{right_table_id} = z.id
         WHERE {left_table_id} = {id};
@@ -66,12 +66,20 @@ def make_query_three_tables(middle_table:str, left_table:str, right_table:str, l
 
 def multi_dual_query(table_1:str, table_2_list_w_id:list, id:int, conn:pg.extensions.connection):
     answer_dict = {}
-    for i, j in table_2_list_w_id:
-        query = make_query_two_tables(table_1, i, j, id)
-        answer = make_curs_and_query(query, conn)
-        unpacked_answer = unpack_answer(answer)
-        answer_dict[i] = unpacked_answer
-        # print(unpacked_answer)
+    try:
+        for i, j, k in table_2_list_w_id:
+            query = make_query_two_tables(table_1, i, j, id, k)
+            answer = make_curs_and_query(query, conn)
+            unpacked_answer = unpack_answer(answer)
+            answer_dict[i] = unpacked_answer
+            # print(unpacked_answer)
+    except:
+        for i, j in table_2_list_w_id:
+            query = make_query_two_tables(table_1, i, j, id)
+            answer = make_curs_and_query(query, conn)
+            unpacked_answer = unpack_answer(answer)
+            answer_dict[i] = unpacked_answer
+    # print(answer_dict)
     return answer_dict
 
 def multi_tri_query(left_table:str, left_table_id:str, table_M_R_list_w_id:list, conn:pg.extensions.connection, id:int):
@@ -91,6 +99,7 @@ def single_item_full_multi_query(table:str, id:int, dual_query_list:list, table_
     overview = make_curs_and_query(overview_query, conn)
     answer['overview'] = unpack_answer(overview)[0]
     answer['traits'] = multi_dual_query(table, dual_query_list, id, conn)
+    # print(answer['traits'])
     answer['related'] = multi_tri_query(table, table_id, middle_right_query_list, conn, id)
     
     return answer
@@ -140,6 +149,7 @@ class InteractableTable(Pg_Table):
 
 
 
+
 classes_table = Pg_Table("classes")
 background_table = Pg_Table("background")
 race_table = Pg_Table("race")
@@ -148,9 +158,10 @@ actor_table = InteractableTable(
     "actor",
     'actor_id',
     [
-        ['classes', 'id'],
-        ['background', 'id'],
-        ['race', 'id']
+        ['classes', 'id', 'class_id'],
+        ['background', 'id', 'background_id'],
+        ['race', 'id', 'race_id'],
+        ['sub_race', 'id', 'sub_race_id']
     ],
     [
         ['faction_members', 'faction', 'faction_id'],

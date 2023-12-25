@@ -46,7 +46,7 @@ app.add_middleware(
 @app.get("/")
 async def homepage():
     pass
-
+# WRITE WAY TO GET JUST ONE OBJECT'S NAME
 @app.get("/actor")
 async def actor_get():
     return utils.actor_table.query_get_10(conn)
