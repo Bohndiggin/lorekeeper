@@ -9,5 +9,6 @@
   },
   "scripts": [
     "script.js"
-  ]
+  ],
+  "download": "https://github.com/Bohndiggin/dmdms/archive/refs/tags/0.0.1.zip"
 }
