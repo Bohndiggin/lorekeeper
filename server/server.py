@@ -4,6 +4,7 @@ import psycopg2.extras
 import os, json
 import utils
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -29,6 +30,7 @@ async def lifespan(app: FastAPI):
     print("Server Shutdown Complete")
 
 app = FastAPI(lifespan=lifespan)
+app.mount('/main', StaticFiles(directory='../client_fvtt/dmdms', html=True), name='dmdms')
 
 origins = [
     '*'
