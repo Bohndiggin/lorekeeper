@@ -47,12 +47,12 @@ Hooks.on("renderSidebarTab", async (app, html) => {
 
     activateListeners(html) {
         super.activateListeners(html)
-        html.getElementById('actor-btn').onclick = async ev => sendSignal('/actor', html);
-        html.getElementById('faction-btn').onclick = async ev => sendSignal('/faction', html);
-        html.getElementById('location-btn').onclick = async ev => sendSignal('/location', html);
-        html.getElementById('historical-fragments-btn').onclick = async ev => sendSignal('/historical-fragments', html);
-        html.getElementById('object-btn').onclick = async ev => sendSignal('/object', html);
-        html.getElementById('world-data-btn').onclick = async ev => sendSignal('/world-data', html);
+        html.find('#actor-btn').onclick = async ev => sendSignal('/actor', html);
+        html.find('#faction-btn').onclick = async ev => sendSignal('/faction', html);
+        html.find('#location-btn').onclick = async ev => sendSignal('/location', html);
+        html.find('#historical-fragments-btn').onclick = async ev => sendSignal('/historical-fragments', html);
+        html.find('#object-btn').onclick = async ev => sendSignal('/object', html);
+        html.find('#world-data-btn').onclick = async ev => sendSignal('/world-data', html);
     }
   }
   
