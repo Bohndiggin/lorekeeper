@@ -2,13 +2,14 @@
   "id": "dmdms",
   "title": "dmdms",
   "description": "A front end for dnddb",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "compatibility": {
     "minimum": "11",
     "verified": "11"
   },
   "scripts": [
-    "script.js"
+    "script.js",
+    "scriptPage.js"
   ],
-  "download": "https://github.com/Bohndiggin/dmdms/archive/refs/tags/0.1.0.zip"
+  "download": "https://github.com/Bohndiggin/dmdms/archive/refs/tags/0.1.1.zip"
 }
