@@ -47,12 +47,12 @@ Hooks.on("renderSidebarTab", async (app, html) => {
 
     activateListeners(html) {
         super.activateListeners(html)
-        html.find('#actor-btn').onclick = async ev => sendSignal('/actor', html);
-        html.find('#faction-btn').onclick = async ev => sendSignal('/faction', html);
-        html.find('#location-btn').onclick = async ev => sendSignal('/location', html);
-        html.find('#historical-fragments-btn').onclick = async ev => sendSignal('/historical-fragments', html);
-        html.find('#object-btn').onclick = async ev => sendSignal('/object', html);
-        html.find('#world-data-btn').onclick = async ev => sendSignal('/world-data', html);
+        html.find('#dmdms-actor-btn').onclick = async ev => sendSignal('/actor', html);
+        html.find('#dmdms-faction-btn').onclick = async ev => sendSignal('/faction', html);
+        html.find('#dmdms-location-btn').onclick = async ev => sendSignal('/location', html);
+        html.find('#dmdms-historical-fragments-btn').onclick = async ev => sendSignal('/historical-fragments', html);
+        html.find('#dmdms-object-btn').onclick = async ev => sendSignal('/object', html);
+        html.find('#dmdms-world-data-btn').onclick = async ev => sendSignal('/world-data', html);
     }
   }
   
@@ -138,9 +138,9 @@ function sendSignal(endpoint, html) {
         .catch((error) => console.log(error))
 }
 
-document.getElementById('actor-btn').onclick = () => sendSignal('/actor');
-document.getElementById('faction-btn').onclick = () => sendSignal('/faction');
-document.getElementById('location-btn').onclick = () => sendSignal('/location');
-document.getElementById('historical-fragments-btn').onclick = () => sendSignal('/historical-fragments');
-document.getElementById('object-btn').onclick = () => sendSignal('/object');
-document.getElementById('world-data-btn').onclick = () => sendSignal('/world-data');
+// document.getElementById('actor-btn').onclick = () => sendSignal('/actor');
+// document.getElementById('faction-btn').onclick = () => sendSignal('/faction');
+// document.getElementById('location-btn').onclick = () => sendSignal('/location');
+// document.getElementById('historical-fragments-btn').onclick = () => sendSignal('/historical-fragments');
+// document.getElementById('object-btn').onclick = () => sendSignal('/object');
+// document.getElementById('world-data-btn').onclick = () => sendSignal('/world-data');
