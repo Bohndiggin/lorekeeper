@@ -1,4 +1,3 @@
-const connection = "http://127.0.0.1:8000";
 
 // let displayArea = document.getElementById('object-display')
 // let singleDisplay = document.getElementById('single-display')
@@ -127,13 +126,15 @@ function writeOne(data, html) {
 }
 
 function sendOneSignal(endpoint) {
-    axios.get(connection + endpoint)
+    const dmdmsconnection = "http://127.0.0.1:8000";
+    axios.get(dmdmsconnection + endpoint)
         .then((response) => writeOne(response.data))
         .catch((error) => console.log(error))
 }
 
 function sendSignal(endpoint, html) {
-    axios.get(connection + endpoint)
+    const dmdmsconnection = "http://127.0.0.1:8000";
+    axios.get(dmdmsconnection + endpoint)
         .then((response) => writeTable(response, endpoint, html))
         .catch((error) => console.log(error))
 }
