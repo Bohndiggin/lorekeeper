@@ -81,9 +81,9 @@ function sendSignal(endpoint) {
         .catch((error) => console.log(error))
 }
 
-document.getElementById('actor-btn').onclick = () => sendSignal('/actor');
-document.getElementById('faction-btn').onclick = () => sendSignal('/faction');
-document.getElementById('location-btn').onclick = () => sendSignal('/location');
-document.getElementById('historical-fragments-btn').onclick = () => sendSignal('/historical-fragments');
-document.getElementById('object-btn').onclick = () => sendSignal('/object');
-document.getElementById('world-data-btn').onclick = () => sendSignal('/world-data');
+document.getElementById('dmdmds-actor-btn').onclick = () => sendSignal('/actor');
+document.getElementById('dmdmds-faction-btn').onclick = () => sendSignal('/faction');
+document.getElementById('dmdmds-location-btn').onclick = () => sendSignal('/location');
+document.getElementById('dmdmds-historical-fragments-btn').onclick = () => sendSignal('/historical-fragments');
+document.getElementById('dmdmds-object-btn').onclick = () => sendSignal('/object');
+document.getElementById('dmdmds-world-data-btn').onclick = () => sendSignal('/world-data');
