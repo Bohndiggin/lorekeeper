@@ -1,7 +1,7 @@
 const connection = "http://127.0.0.1:8000";
 
-let displayArea = document.getElementById('object-display')
-let singleDisplay = document.getElementById('single-display')
+// let displayArea = document.getElementById('object-display')
+// let singleDisplay = document.getElementById('single-display')
 
 Hooks.on("renderSidebarTab", async (app, html) => {
     if (app instanceof JournalDirectory) {
@@ -44,12 +44,23 @@ Hooks.on("renderSidebarTab", async (app, html) => {
       options.title = "Dungeon Master Data Managment System"
       return options;
     }
+
+    activateListeners(html) {
+        super.activateListeners(html)
+        html.getElementById('actor-btn').onclick = async ev => sendSignal('/actor', html);
+        html.getElementById('faction-btn').onclick = async ev => sendSignal('/faction', html);
+        html.getElementById('location-btn').onclick = async ev => sendSignal('/location', html);
+        html.getElementById('historical-fragments-btn').onclick = async ev => sendSignal('/historical-fragments', html);
+        html.getElementById('object-btn').onclick = async ev => sendSignal('/object', html);
+        html.getElementById('world-data-btn').onclick = async ev => sendSignal('/world-data', html);
+    }
   }
   
 
 
-function writeTable(response, endpoint){
-    displayArea.innerHTML = ""
+function writeTable(response, endpoint, html){
+    let display = html.getElementById('object-display')
+    display.innerHTML = ""
     let keys = Object.keys(response.data[0])
     let tableHTML = `<table><tr>`
     for (let j = 0;j<keys.length;j++) {
@@ -65,19 +76,20 @@ function writeTable(response, endpoint){
             tableHTML += `<td>${values[j]}</td>`
         }
         tableHTML += `</tr>`
-        displayArea.innerHTML += tableHTML
+        display.innerHTML += tableHTML
         // console.log(`${values[0]}-${values[1]}`)
         // document.getElementById(`${values[0]}-${values[1]}`).onclick = () => console.log(`${endpoint}/?id=${values[0]}`)
     }
     tableHTML += `</table>`
-    displayArea.innerHTML = tableHTML
+    display.innerHTML = tableHTML
     for (let i = 0;i<response.data.length;i++){
         let values = Object.values(response.data[i])
         document.getElementById(`${values[0]}-${values[1]}`).onclick = () => sendOneSignal(`${endpoint}/?id=${values[0]}`)
     }
 }
 
-function writeOne(data) {
+function writeOne(data, html) {
+    let singleDisplay = html.getElementById('single-display')
     singleDisplay.innerHTML = '';
     let { overview, traits, related } = data
     // console.log(overview)
@@ -120,9 +132,9 @@ function sendOneSignal(endpoint) {
         .catch((error) => console.log(error))
 }
 
-function sendSignal(endpoint) {
+function sendSignal(endpoint, html) {
     axios.get(connection + endpoint)
-        .then((response) => writeTable(response, endpoint))
+        .then((response) => writeTable(response, endpoint, html))
         .catch((error) => console.log(error))
 }
 
