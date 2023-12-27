@@ -2,7 +2,7 @@
   "id": "dmdms",
   "title": "dmdms",
   "description": "A front end for dnddb",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "compatibility": {
     "minimum": "11",
     "verified": "11"
@@ -10,5 +10,5 @@
   "scripts": [
     "script.js"
   ],
-  "download": "https://github.com/Bohndiggin/dmdms/archive/refs/tags/0.0.8.zip"
+  "download": "https://github.com/Bohndiggin/dmdms/archive/refs/tags/0.0.9.zip"
 }
