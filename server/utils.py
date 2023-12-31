@@ -1,4 +1,5 @@
 import psycopg2 as pg
+from psycopg2 import sql
 import psycopg2.extras
 import os, csv
 from pydantic import BaseModel
@@ -6,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 db_url = os.getenv('CONNSTR')
-generic_select_query = 'SELECT * FROM {} LIMIT 10;'
+generic_select_query = sql.SQL('SELECT * FROM {} LIMIT 10;')
 
 def unpack_answer(answer):
     answers_list = []
@@ -23,11 +24,18 @@ def open_csv_and_query(query:str, file_location:str, cursor:pg.extensions.cursor
         for i in values:
             cursor.execute(query, i)
 
-def make_curs_and_query(query:str, conn:pg.extensions.connection) -> dict:
+def make_curs_and_query(query:sql.SQL, conn:pg.extensions.connection) -> dict:
     curs = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    # # print(query_list)
+    # query = sql.SQL(query)
+    # print(query)
+    # query.format(query_list)
+    # print("AAAAAAAAAAAAAH" + query)
+    # query.format('\'', '')
     curs.execute(query)
     result = curs.fetchall()
     # answer = result[0]
+    # print(result)
     yield result
     curs.close()
 
@@ -41,27 +49,32 @@ def make_curs_query_commit(query:str, conn:pg.extensions.connection):
         curs.close()
 
 def single_item_table_query(table_name:str, id:int) -> str:
-    query = f"""
-        SELECT * FROM {table_name} x
-        WHERE x.id = {id};
+    query = """
+        SELECT * FROM {sql_table_name} x
+        WHERE x.id = {sql_id};
     """
+    query = sql.SQL(query).format(sql_table_name = sql.Identifier(table_name), sql_id = sql.Literal(id))
     return query
 
 def make_query_two_tables(table_1:str, table_2:str, table_2_id:str, id:int, table_1_id:str='id') -> str:
-    query = f"""
-        SELECT x.{table_1_id}, y.* FROM {table_1} x
-        JOIN {table_2} y ON x.{table_1_id} = y.{table_2_id}
-        WHERE x.id = {id};
+    query = """
+        SELECT x.{}, y.* FROM {} x
+        JOIN {} y ON x.{} = y.{}
+        WHERE x.id = {};
     """
+    query = sql.SQL(query)
+    query = query.format(sql.Identifier(table_1_id),sql.Identifier(table_1),sql.Identifier(table_2),sql.Identifier(table_1_id),sql.Identifier(table_2_id),sql.Literal(id))
     return query
 
 def make_query_three_tables(middle_table:str, left_table:str, right_table:str, left_table_id:str, right_table_id:str, id:int) -> str:
-    query = f"""
-        SELECT z.*, x.* FROM {middle_table} x
-        JOIN {left_table} y ON x.{left_table_id} = y.id
-        JOIN {right_table} z ON x.{right_table_id} = z.id
-        WHERE {left_table_id} = {id};
+    query = """
+        SELECT z.*, x.* FROM {} x
+        JOIN {} y ON x.{} = y.id
+        JOIN {} z ON x.{} = z.id
+        WHERE {} = {};
     """
+    query = sql.SQL(query)
+    query = query.format(sql.Identifier(middle_table),sql.Identifier(left_table),sql.Identifier(left_table_id),sql.Identifier(right_table),sql.Identifier(right_table_id),sql.Identifier(left_table_id),sql.Literal(id))
     return query
 
 def multi_dual_query(table_1:str, table_2_list_w_id:list, id:int, conn:pg.extensions.connection):
@@ -119,7 +132,7 @@ class Pg_Table:
         self.columns = find_column_names(self.table_name)
         self.insert_query_variables = str(tuple(self.columns)).replace("\'", "")
         self.insert_query_values = str("%s, "*len(self.columns))[:-2]
-        self.select_10_query = generic_select_query.format(self.table_name)
+        # self.select_10_query = generic_select_query.format(self.table_name)
 
     def build_query(self):
         query_full = f"""
@@ -129,24 +142,43 @@ class Pg_Table:
         return query_full
     
     def select_all(self):
-        query_full = f'SELECT * FROM {self.table_name}'
-        return query_full
+        query_full = "SELECT * FROM {table_name}"
+        query_full_object = {
+            'table_name': self.table_name
+        }
+        return query_full, query_full_object
     
     def query_get_10(self, conn:pg.extensions.connection):
-        answer = make_curs_and_query(self.select_10_query, conn)
+        name_object = sql.Identifier(self.table_name)
+        query = generic_select_query.format(name_object)
+        answer = make_curs_and_query(query, conn)
         answers = unpack_answer(answer)
         return answers
     
 class InteractableTable(Pg_Table):
-    def __init__(self, table_name: str, table_id:str, query_list:list, middle_right_list:list) -> None:
+    def __init__(self, table_name: str, table_id:str, query_list:list, middle_right_list:list, name_str:str) -> None:
         super().__init__(table_name)
         self.query_list = query_list
         self.middle_right_list = middle_right_list
         self.table_id = table_id
+        self.name_str = name_str
 
     def query_one_by_id(self, id:int, conn:pg.extensions.connection) -> dict:
         return single_item_full_multi_query(self.table_name, id, self.query_list, self.table_id, self.middle_right_list, conn)
 
+    def get_item_name(self, id:int, conn:pg.extensions.connection):
+        query = """
+            SELECT x.{name_str} FROM {table_name} x
+            WHERE {table_name}.id = {id};
+        """
+        query_object = {
+            'name_str': self.name_str,
+            'table_name': self.table_name,
+            'id': id
+        }
+        packed_answer = make_curs_and_query(query, query_object, conn)
+        answer = unpack_answer(packed_answer)
+        return answer
 
 
 
@@ -167,7 +199,8 @@ actor_table = InteractableTable(
         ['faction_members', 'faction', 'faction_id'],
         ['residents', 'location_', 'location_id'],
         ['involved_history_actor', 'historical_fragments', 'historical_fragment_id']
-    ]
+    ],
+    'first_name'
     )
 faction_table = InteractableTable(
     "faction",
@@ -178,7 +211,8 @@ faction_table = InteractableTable(
     [
         ['faction_members', 'actor', 'actor_id'],
         ['location_to_faction', 'faction', 'faction_id']
-    ]
+    ],
+    'faction_name'
     )
 faction_a_on_b_relations_table = Pg_Table("faction_a_on_b_relations")
 faction_members_table = Pg_Table("faction_members")
@@ -193,7 +227,8 @@ location_table = InteractableTable(
     [
         ['residents', 'actor', 'actor_id'],
         ['location_to_faction', 'faction', 'faction_id']
-    ]
+    ],
+    'location_name'
     )
 location_to_faction_table = Pg_Table('location_to_faction')
 location_dungeon_table = Pg_Table('location_dungeon')
@@ -214,7 +249,8 @@ historical_fragments_table = InteractableTable(
         ['involved_history_location', 'location_', 'location_id'],
         ['involved_history_object', 'object_', 'object_id'],
         ['involved_history_world_data', 'world_data', 'world_data_id']
-    ]
+    ],
+    'event_name'
     )
 involved_history_actor_table = Pg_Table('involved_history_actor')
 involved_history_location_table = Pg_Table('involved_history_location')
@@ -227,7 +263,8 @@ object_table = InteractableTable(
     [
         ['involved_history_object', 'historical_fragments', 'historical_fragment_id'],
         ['object_to_owner', 'actor', 'actor_id']
-    ]
+    ],
+    'object_name'
     )
 involved_history_object_table = Pg_Table('involved_history_object')
 object_to_owner_table = Pg_Table('object_to_owner')
@@ -239,7 +276,9 @@ world_data_table = InteractableTable(
     ],
     [
         ['involved_history_world_data', 'historical_fragments', 'historical_fragment_id']
-    ]
+    ],
+    'data_name'
     )
 involved_history_world_data_table = Pg_Table('involved_history_world_data')
 
+# print(actor_table.get_item_name())

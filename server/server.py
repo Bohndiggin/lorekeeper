@@ -93,6 +93,8 @@ async def object_get_one(id:int = 0):
 async def world_data_get():
     return utils.world_data_table.query_get_10(conn)
 
-@app.get('world-data/')
+@app.get('/world-data/')
 async def world_data_get_one(id:int = 0):
     return utils.world_data_table.query_one_by_id(id, conn)
+
+# print(utils.actor_table.get_item_name(2, conn))
