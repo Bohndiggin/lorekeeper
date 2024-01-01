@@ -24,47 +24,6 @@ Hooks.on("init", () => {
     })
 })
 
-
-// class SIMP extends Application {
-//     static get defaultOptions() {
-//         const options = super.defaultOptions;
-//         options.id = "dmdms";
-//         options.template = "modules/dmdms/index2.html"
-//         options.classes.push("dmdms");
-//         options.resizable = false;
-//         options.height = "auto";
-//         options.width = 400;
-//         options.minimizable = true;
-//         options.title = "Dungeon Master Data Managment System"
-//         return options;
-//     }
-//     activateListeners(html) {
-//         super.activateListeners(html)
-//         console.log('listening')
-//         // html.find('#-butt-').onclick(ev => {
-//         //     alert('AAAAAH')
-//         //     console.log('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAh')
-//         // })
-//         // html.on('click', '-butt-', () => {
-//         //     console.log('heard')
-//         // })
-//         html.ready(console.log("ready"))
-//         console.log(html.find(buttonFind))
-//         let buttonFinal = $("#-butt-")
-//         buttonFinal.click((ev) => {
-//             this.otherFunc("AAAAH FANCY")
-//         })
-//         html.find(buttonFind).onclick = () => {
-//             console.log('help me lord')
-//         }
-//         console.log(html)
-//     }
-//     otherFunc(message) {
-//         console.log(message)
-//     }
-// }
-
-
 class DMDMS extends FormApplication {
 
 

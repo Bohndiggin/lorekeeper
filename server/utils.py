@@ -26,16 +26,8 @@ def open_csv_and_query(query:str, file_location:str, cursor:pg.extensions.cursor
 
 def make_curs_and_query(query:sql.SQL, conn:pg.extensions.connection) -> dict:
     curs = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    # # print(query_list)
-    # query = sql.SQL(query)
-    # print(query)
-    # query.format(query_list)
-    # print("AAAAAAAAAAAAAH" + query)
-    # query.format('\'', '')
     curs.execute(query)
     result = curs.fetchall()
-    # answer = result[0]
-    # print(result)
     yield result
     curs.close()
 
@@ -130,16 +122,28 @@ class Pg_Table:
     def __init__(self, table_name:str) -> None:
         self.table_name = table_name
         self.columns = find_column_names(self.table_name)
-        self.insert_query_variables = str(tuple(self.columns)).replace("\'", "")
-        self.insert_query_values = str("%s, "*len(self.columns))[:-2]
+        insert_query_variables = str(tuple(self.columns)).replace("\'", "")
+        insert_query_values = str("%s, "*len(self.columns))[:-2]
+        self.insert_query = self.build_insert_query(insert_query_variables, insert_query_values)
         # self.select_10_query = generic_select_query.format(self.table_name)
 
-    def build_query(self):
+    def build_insert_query(self, insert_query_variables, insert_query_values) -> sql.SQL:
         query_full = f"""
-            INSERT INTO {self.table_name} {self.insert_query_variables}
-            VALUES ({self.insert_query_values})
+            INSERT INTO {self.table_name} {insert_query_variables}
+            VALUES ({insert_query_values})
         """
-        return query_full
+        query_SQL = sql.SQL(query_full)
+        print(query_SQL)
+        return query_SQL
+
+    
+    def insert_data(self, data:list, conn:pg.extensions.connection) -> str:
+        """This Function uses the build_insert_query sql.SQL and an object to add rows to the data"""
+        for i in data:
+            current_query = self.insert_query
+            current_query.format()
+            make_curs_and_query()
+        pass
     
     def select_all(self):
         query_full = "SELECT * FROM {table_name}"
@@ -154,6 +158,9 @@ class Pg_Table:
         answer = make_curs_and_query(query, conn)
         answers = unpack_answer(answer)
         return answers
+    
+    def post_data(self):
+        pass
     
 class InteractableTable(Pg_Table):
     def __init__(self, table_name: str, table_id:str, query_list:list, middle_right_list:list, name_str:str) -> None:

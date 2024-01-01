@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
     print("Server Shutdown Complete")
 
 app = FastAPI(lifespan=lifespan)
-app.mount('/main', StaticFiles(directory='../client_fvtt/dmdms', html=True), name='dmdms')
+app.mount('/main', StaticFiles(directory='../client_browser', html=True), name='dmdms')
 
 origins = [
     '*'
@@ -96,5 +96,3 @@ async def world_data_get():
 @app.get('/world-data/')
 async def world_data_get_one(id:int = 0):
     return utils.world_data_table.query_one_by_id(id, conn)
-
-# print(utils.actor_table.get_item_name(2, conn))
