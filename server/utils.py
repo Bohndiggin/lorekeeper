@@ -28,13 +28,16 @@ def make_curs_and_query(query:sql.SQL, conn:pg.extensions.connection) -> dict:
     curs = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     curs.execute(query)
     result = curs.fetchall()
+    conn.commit()
     yield result
     curs.close()
 
 def make_curs_query_commit(query:str, conn:pg.extensions.connection):
     curs = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     try:
-        yield curs.execute(query) # should yield .fetchall
+        curs.execute(query)
+        conn.commit()
+        yield curs.fetchall(query) # should yield .fetchall
     except Exception as e:
         yield e
     finally:
@@ -69,7 +72,8 @@ def make_query_three_tables(middle_table:str, left_table:str, right_table:str, l
     query = query.format(sql.Identifier(middle_table),sql.Identifier(left_table),sql.Identifier(left_table_id),sql.Identifier(right_table),sql.Identifier(right_table_id),sql.Identifier(left_table_id),sql.Literal(id))
     return query
 
-def multi_dual_query(table_1:str, table_2_list_w_id:list, id:int, conn:pg.extensions.connection):
+def multi_dual_query(table_1:str, table_2_list_w_id:list, id:int, conn:pg.extensions.connection): # TODO Refactor all query stuff into the classes. Have it take in other objects as the argument.
+    """Function runs multiple iterations of make_query_two_tables and returns a dictionary."""
     answer_dict = {}
     try:
         for i, j, k in table_2_list_w_id:
@@ -88,6 +92,18 @@ def multi_dual_query(table_1:str, table_2_list_w_id:list, id:int, conn:pg.extens
     return answer_dict
 
 def multi_tri_query(left_table:str, left_table_id:str, table_M_R_list_w_id:list, conn:pg.extensions.connection, id:int):
+    """Function runs multiple iterations of make_query_three_tables and returns a dictionary of the answers
+    INPUTS:
+        left_table = the name of the left table,
+
+        left_table_id = the id that other tables use to refer to the left table
+
+        table_M_R_list_w_id = a list containing these elements [middle table name, right table name, right table id]
+
+        conn = your postgreSQL connection
+
+        id = the id of the item you need more info about
+    """
     answer_dict = {}
     for i, j, k in table_M_R_list_w_id:
         query = make_query_three_tables(i, left_table, j, left_table_id, k, id)
@@ -99,7 +115,7 @@ def multi_tri_query(left_table:str, left_table_id:str, table_M_R_list_w_id:list,
 def single_item_full_multi_query(table:str, id:int, dual_query_list:list, table_id:str, middle_right_query_list:list, conn:pg.extensions.connection) -> dict:
     """Function finds everything associated with a single item and returns a dictionary"""
     answer = {}
-
+    # Need a function to find proper name/item_name for each of the answers? Or uh. Table classes handle the queries??????
     overview_query = single_item_table_query(table, id)
     overview = make_curs_and_query(overview_query, conn)
     answer['overview'] = unpack_answer(overview)[0]
@@ -110,6 +126,7 @@ def single_item_full_multi_query(table:str, id:int, dual_query_list:list, table_
     return answer
 
 def find_column_names(table_name:str) -> list:
+    """Queries the database and gets the column names sans the id then returns them as a list"""
     conn = pg.connect(db_url)
     curs = conn.cursor()
     curs.execute(f"SELECT * FROM {table_name} LIMIT 0;")
@@ -124,75 +141,113 @@ class Pg_Table:
         self.columns = find_column_names(self.table_name)
         insert_query_variables = str(tuple(self.columns)).replace("\'", "")
         insert_query_values = str("%s, "*len(self.columns))[:-2]
-        self.insert_query = self.build_insert_query(insert_query_variables, insert_query_values)
+        self.insert_query = self._build_post_query(insert_query_variables, insert_query_values)
         # self.select_10_query = generic_select_query.format(self.table_name)
 
-    def build_insert_query(self, insert_query_variables, insert_query_values) -> sql.SQL:
+    def _build_post_query(self, insert_query_variables, insert_query_values) -> sql.SQL:
+        """Private Function builds out the default/template query for posting data"""
         query_full = f"""
             INSERT INTO {self.table_name} {insert_query_variables}
             VALUES ({insert_query_values})
         """
         query_SQL = sql.SQL(query_full)
-        print(query_SQL)
+        # print(query_SQL)
         return query_SQL
 
     
-    def insert_data(self, data:list, conn:pg.extensions.connection) -> str:
-        """This Function uses the build_insert_query sql.SQL and an object to add rows to the data"""
+    def post_data(self, data:list, conn:pg.extensions.connection) -> list:
+        """This Function uses the build_insert_query sql.SQL and a list of lists to add rows to the data"""
+        data_returned = []
         for i in data:
+            if len(i) != len(self.columns):
+                error_message_dict = {}
+                error_message_dict[data.index(i)] = 'ERROR: list length too short to process'
+                data_returned += error_message_dict
+                continue
             current_query = self.insert_query
-            current_query.format()
-            make_curs_and_query()
-        pass
+            current_query = current_query.format(*i)
+            data_returned += make_curs_and_query(current_query, conn)
+        return data_returned
     
     def select_all(self):
+        """Function should query and return all rows of table TODO make that actually happen"""
         query_full = "SELECT * FROM {table_name}"
         query_full_object = {
             'table_name': self.table_name
         }
         return query_full, query_full_object
     
-    def query_get_10(self, conn:pg.extensions.connection):
+    def query_get_10(self, conn:pg.extensions.connection) -> list:
+        """Function queries and returns the first 10 of a table. TODO make it able to get next 10"""
         name_object = sql.Identifier(self.table_name)
         query = generic_select_query.format(name_object)
         answer = make_curs_and_query(query, conn)
         answers = unpack_answer(answer)
         return answers
     
-    def post_data(self):
+    def delete_row(self):
+        """Function takes in an id and deletes the row with the matching id. It returns a sucess/fail"""
         pass
     
-class InteractableTable(Pg_Table):
-    def __init__(self, table_name: str, table_id:str, query_list:list, middle_right_list:list, name_str:str) -> None:
+class ReferrableTable(Pg_Table):
+    def __init__(self, table_name: str, item_name: str = None) -> None:
         super().__init__(table_name)
+        self.item_name = item_name
+
+    def get_item_name(self, id:int, conn:pg.extensions.connection):
+        query = """
+            SELECT x.{item_name} FROM {table_name} x
+            WHERE x.id = {id};
+        """
+        query_object = {
+            'item_name': self.item_name,
+            'table_name': self.table_name,
+            'id': id
+        }
+        query = query.format(**query_object)
+        packed_answer = make_curs_and_query(query, conn)
+        answer = unpack_answer(packed_answer)
+        return answer
+
+class InteractableTable(ReferrableTable):
+    def __init__(self, table_name: str, table_id:str, query_list:list, middle_right_list:list, name_str:str) -> None:
+        super().__init__(table_name, name_str)
         self.query_list = query_list
         self.middle_right_list = middle_right_list
         self.table_id = table_id
         self.name_str = name_str
+        self.trait_table_list = []
+        self.middle_table_list = []
+        self.right_table_list = []
 
     def query_one_by_id(self, id:int, conn:pg.extensions.connection) -> dict:
         return single_item_full_multi_query(self.table_name, id, self.query_list, self.table_id, self.middle_right_list, conn)
+    
+    def test(self, other:'InteractableTable'):
+        pass
 
-    def get_item_name(self, id:int, conn:pg.extensions.connection):
-        query = """
-            SELECT x.{name_str} FROM {table_name} x
-            WHERE {table_name}.id = {id};
-        """
-        query_object = {
-            'name_str': self.name_str,
-            'table_name': self.table_name,
-            'id': id
-        }
-        packed_answer = make_curs_and_query(query, query_object, conn)
-        answer = unpack_answer(packed_answer)
-        return answer
+    def connect_to_traits(self, trait_table_list:list):
+        for table in trait_table_list:
+            if type(table) != ReferrableTable:
+                continue
+            self.trait_table_list.append(table)
+
+    def _connect_to_trait(self, trait_table:ReferrableTable):
+        self.trait_table_list += trait_table
+
+    def connect_to_middle(self, middle_table):
+        """Function connects this table to middle/joining tables. It returns nothing but it allows me to move singe item full multi query inside"""
+        pass
+
+    def connect_to_right(self, right_table):
+        pass
 
 
 
-classes_table = Pg_Table("classes")
-background_table = Pg_Table("background")
-race_table = Pg_Table("race")
-sub_race_table = Pg_Table("sub_race")
+classes_table = ReferrableTable("classes", 'class_name')
+background_table = ReferrableTable("background", 'background_name')
+race_table = ReferrableTable("race", 'race_name')
+sub_race_table = ReferrableTable("sub_race", 'sub_race_name')
 actor_table = InteractableTable(
     "actor",
     'actor_id',
@@ -289,3 +344,4 @@ world_data_table = InteractableTable(
 involved_history_world_data_table = Pg_Table('involved_history_world_data')
 
 # print(actor_table.get_item_name())
+# CONNECT_TO_Middle connect_to_right
