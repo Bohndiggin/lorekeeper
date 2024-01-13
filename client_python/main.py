@@ -1,5 +1,6 @@
 import psycopg2 as pg
 import utils
+import requests
 import os
 from dotenv import load_dotenv
 
