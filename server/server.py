@@ -67,9 +67,17 @@ async def actor_post(body:RequestBodyList):
 async def actor_get_one(id:int = 0):
     return utils.actor_table.query_one_by_id(id)
 
+@app.delete('/actor/')
+async def actor_delete_one(id:int):
+    return utils.actor_table.delete_row_w_dependancies(id)
+
 @app.get('/faction')
 async def faction_get():
     return utils.faction_table.query_get_10()
+
+@app.post('/faction')
+async def faction_post(body:RequestBodyList):
+    return utils.actor_table.post_data(body.items_list)
 
 @app.get('/faction/')
 async def faction_get_one(id:int = 0):
@@ -102,6 +110,10 @@ async def object_post(body:RequestBodyList):
 @app.get('/object/')
 async def object_get_one(id:int = 0):
     return utils.object_table.query_one_by_id(id)
+
+@app.delete('/object/')
+async def object_delete_by_id(id:int):
+    return utils.object_table.delete_row(id)
 
 @app.get('/world-data')
 async def world_data_get():

@@ -107,9 +107,14 @@ class Pg_Table:
         answers = unpack_answer(answer)
         return answers
     
-    def delete_row(self):
+    def delete_row(self, id:int):
         """Function takes in an id and deletes the row with the matching id. It returns a sucess/fail"""
-        pass
+        query = """
+                DELETE FROM {table_name}
+                WHERE id = {id};
+        """
+        query = sql.SQL(query).format(table_name=sql.Identifier(self.table_name), id=sql.Literal(id))
+        return make_curs_query_commit(query)
 
 class EndCapTable(Pg_Table):
     def __init__(self, table_name: str, table_id_name: str = 'id') -> None:
@@ -232,6 +237,14 @@ class InteractableTable(ReferrableTable):
         answer['traits'] = self.multi_dual_query(id)
         answer['related'] = self.multi_tri_query(id)
         return answer
+    
+    def delete_row_w_dependancies(self, id:int):
+        """Function finds everything related to a table and deletes them then the table itself"""
+        # for i in self.trait_table_list:
+        #     i.delete_row(id)
+        for i in self.middle_table_list:
+            i.delete_row(id)
+        self.delete_row(id)
 
 
 
