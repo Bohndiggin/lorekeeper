@@ -83,17 +83,33 @@ async def faction_post(body:RequestBodyList):
 async def faction_get_one(id:int = 0):
     return utils.faction_table.query_one_by_id(id)
 
+@app.delete('/faction/')
+async def faction_delete_one(id:int):
+    return utils.faction_table.delete_row_w_dependancies(id)
+
 @app.get('/location')
 async def location_get():
     return utils.location_table.query_get_10()
+
+@app.post('/location')
+async def location_post(body:RequestBodyList):
+    return utils.location_table.post_data(body.items_list)
 
 @app.get('/location/')
 async def location_get_one(id:int = 0):
     return utils.location_table.query_one_by_id(id)
 
+@app.delete('/location/')
+async def loctaion_delete_one(id:int):
+    return utils.location_table.delete_row_w_dependancies(id)
+
 @app.get('/historical-fragments')
 async def historical_fragments_get():
     return utils.historical_fragments_table.query_get_10()
+
+@app.post('/historical-fragments')
+async def historical_fregments_post(body:RequestBodyList):
+    return utils.historical_fragments_table.post_data(body.items_list)
 
 @app.get('/historical-fragments/')
 async def historical_fragments_get_one(id:int = 0):
