@@ -11,10 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 load_dotenv()
-# db_url = os.getenv('CONNSTR')
-# conn = pg.connect(db_url)
-# curs = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-# generic_select_query = 'SELECT * FROM {};'
 
 def unpack_answer(answer):
     answers_list = []
@@ -54,7 +50,7 @@ app.add_middleware(
 @app.get("/")
 async def homepage():
     pass
-# WRITE WAY TO GET JUST ONE OBJECT'S NAME
+
 @app.get("/actor")
 async def actor_get():
     return utils.actor_table.query_get_10()
@@ -62,6 +58,10 @@ async def actor_get():
 @app.post('/actor')
 async def actor_post(body:RequestBodyList):
     return utils.actor_table.post_data(body.items_list)
+
+@app.get('/actor-names')
+async def actor_get_names():
+    return utils.actor_table.get_all_named()
 
 @app.get('/actor/')
 async def actor_get_one(id:int = 0):

@@ -37,6 +37,13 @@ def make_curs_query_commit(query:sql.SQL) -> str:
         conn.commit()
     return ['sucess!']
 
+def query_to_answer(query:str, query_object:dict) -> list:
+    query = sql.SQL(query)
+    query = query.format(**query_object)
+    packed_answer = make_curs_and_query(query)
+    answer = unpack_answer(packed_answer)
+    return answer
+
 class Pg_Table:
     """Basic Table Parent Class"""
     def __init__(self, table_name:str, table_id_name:str='id') -> None:
@@ -85,14 +92,15 @@ class Pg_Table:
         return data_returned
 
 class InteractiveTable(Pg_Table):
+    """Parent class for tables that will be directly interacted with by the user."""
     def __init__(self, table_name: str, proper_name:str, foreign_key_name:str, table_id_name: str = 'id') -> None:
         super().__init__(table_name, table_id_name)
         self.proper_name = proper_name
         self.foreign_key_name = foreign_key_name
 
     def select_all(self):
-        """Function should query and return all rows of table TODO make that actually happen"""
-        query_full = "SELECT * FROM {table_name}"
+        """Function queries and returns all rows of table"""
+        query_full = "SELECT * FROM {table_name};"
         query_full_object = {
             'table_name': self.table_name
         }
@@ -115,21 +123,31 @@ class InteractiveTable(Pg_Table):
         answers = unpack_answer(answer)
         return answers
 
+    def get_all_named(self) -> list[dict]:
+        """Function returns a list of every item in the table, proper name only"""
+        query = """
+            SELECT x.id, x.{proper_name} FROM {table_name} x;
+        """
+        query_object = {
+            'proper_name': sql.Identifier(self.proper_name),
+            'table_name': sql.Identifier(self.table_name)
+        }
+        answer = query_to_answer(query, query_object)
+        return answer
+
     def get_item_name(self, id:int) -> str:
         query = """
             SELECT x.{proper_name} FROM {table_name} x
             WHERE x.id = {id};
         """
         query_object = {
-            'item_name': self.proper_name,
-            'table_name': self.table_name,
-            'id': id
+            'item_name': sql.Identifier(self.proper_name),
+            'table_name': sql.Identifier(self.table_name),
+            'id': sql.Literal(id)
         }
-        query = query.format(**query_object)
-        packed_answer = make_curs_and_query(query)
-        answer = unpack_answer(packed_answer)
+        answer = query_to_answer(query, query_object)
         return answer[0]
-    
+
     def delete_row(self, id:int):
         """Function takes in an id and deletes the row with the matching id. It returns a sucess/fail"""
         query = """
@@ -140,8 +158,12 @@ class InteractiveTable(Pg_Table):
         return make_curs_query_commit(query)
 
 class BackgroundTable(Pg_Table):
+    """Parent class for tables that will not be directly influenced by the user."""
     def __init__(self, table_name: str, table_id_name: str = 'id') -> None:
         super().__init__(table_name, table_id_name)
+
+    def delete_row_with_id(self, id:int):
+        pass
 
 class ConnectiveTable(BackgroundTable):
     def __init__(self, table_name: str, first_table:'QueryableTable', second_table:'QueryableTable',  table_id_name: str = 'id') -> None:
@@ -152,13 +174,14 @@ class ConnectiveTable(BackgroundTable):
     def query_three_tables(self, foreign_id_str:str, id:int) -> tuple[list, str]:
         """Function queries 3 tables, Left Middle and Right. It returns a value(the answer) and a key(the middle table name)"""
         query = """
-            SELECT z.*, x.*, y.* FROM {middle_table_name} x
+            SELECT y.id, z.{right_proper_name}, y.{left_proper_name}, x.* FROM {middle_table_name} x
             JOIN {left_table_name} y ON x.{left_table_foreign_key_str} = y.id
             JOIN {right_table_name} z ON x.{right_table_foreign_key_str} = z.id
             WHERE {foreign_id_str} = {id};
         """
-        query = sql.SQL(query)
         query_object = {
+            'right_proper_name': sql.Identifier(self.second_table.proper_name),
+            'left_proper_name': sql.Identifier(self.first_table.proper_name),
             'middle_table_name': sql.Identifier(self.table_name),
             'left_table_name': sql.Identifier(self.first_table.table_name),
             'left_table_foreign_key_str': sql.Identifier(self.first_table.foreign_key_name),
@@ -167,11 +190,9 @@ class ConnectiveTable(BackgroundTable):
             'foreign_id_str': sql.Identifier(foreign_id_str),
             'id': sql.Literal(id)
         }
-        query = query.format(**query_object)
-        packed_answer = make_curs_and_query(query)
-        answer = unpack_answer(packed_answer)
+        answer = query_to_answer(query, query_object)
         return answer, self.table_name
-    
+
     def multi_delete(self, foreign_id_str:str, foreign_id:int):
         """Function takes in an id and deletes the row with the matching id. It returns a sucess/fail"""
         query = """
@@ -193,7 +214,6 @@ class SelfConnectiveTable(ConnectiveTable):
             JOIN {connected_table} z ON z.id = x.{foreign_key_2}
             WHERE x.{foreign_key_1} = {id};
         """
-        query = sql.SQL(query)
         query_object = {
             'table_name': sql.Identifier(self.table_name),
             'connected_table': sql.Identifier(self.first_table.table_name),
@@ -201,13 +221,11 @@ class SelfConnectiveTable(ConnectiveTable):
             'foreign_key_2': sql.Identifier(self.foreign_keys[1]),
             'id': sql.Literal(id)
         }
-        query = query.format(**query_object)
-        packed_answer = make_curs_and_query(query)
-        answer = unpack_answer(packed_answer)
+        answer = query_to_answer(query, query_object)
         return answer, self.table_name
 
 class EndCapTable(InteractiveTable):
-    def __init__(self, table_name: str, proper_name: str, foreign_key_name: str, table_id_name: str = 'id') -> None:
+    def __init__(self, table_name: str, foreign_key_name: str, proper_name: str, table_id_name: str = 'id') -> None:
         super().__init__(table_name, proper_name, foreign_key_name, table_id_name)
 
 class QueryableTable(InteractiveTable):
@@ -229,13 +247,13 @@ class QueryableTable(InteractiveTable):
         """Function connects this table to rubberbanding tables"""
         self.self_connective_table_list = [table for table in self_connective_tables if type(table) == SelfConnectiveTable]
 
-    def query_two_tables(self, table_2_obj:EndCapTable, id:int) -> tuple[sql.SQL, str]:
+    def query_two_tables(self, table_2_obj:EndCapTable, id:int) -> tuple[list, str]:
+        """Function queries the object's table and one other, an EndCapTable and returns a list of answers and the name of the table queried, as a string"""
         query = """
             SELECT x.id, y.* FROM {table_1_name} x
             JOIN {table_2_name} y ON x.{foreign_key} = y.{table_1_id_name}
             WHERE x.id = {id};
         """
-        query = sql.SQL(query)
         query_object = {
             'table_1_name': sql.Identifier(self.table_name),
             'table_2_name': sql.Identifier(table_2_obj.table_name),
@@ -243,9 +261,7 @@ class QueryableTable(InteractiveTable):
             'table_1_id_name': sql.Identifier(table_2_obj.table_id_name),
             'id': sql.Literal(id)
         }
-        query = query.format(**query_object)
-        packed_answer = make_curs_and_query(query)
-        answer = unpack_answer(packed_answer)
+        answer = query_to_answer(query, query_object)
         return answer, table_2_obj.table_name
 
     def multi_dual_query(self, id:int) -> dict:
@@ -264,7 +280,8 @@ class QueryableTable(InteractiveTable):
             answer_dict[key] = value
         return answer_dict
     
-    def multi_band_query(self, id:int) -> dict:
+    def multi_self_connected_query(self, id:int) -> dict:
+        """Funciton queries the self connected table associated with this object, if any."""
         answer_dict = {}
         for table in self.self_connective_table_list:
             value, key = table.query_connected(id)
@@ -275,22 +292,18 @@ class QueryableTable(InteractiveTable):
         """Function finds everything associated with a single item and returns a dictionary"""
         answer = {}
         answer['overview'] = self.single_item_table_query(id)[0]
-        answer['self-connective'] = self.multi_band_query(id)
+        answer['self-connective'] = self.multi_self_connected_query(id)
         answer['traits'] = self.multi_dual_query(id)
         answer['related'] = self.multi_tri_query(id)
         return answer
     
     def delete_row_w_dependancies(self, foreign_key:str, id:int):
-        """Function finds everything related to a table and deletes them then the table itself"""
-        for i in self.self_connective_table_list: #TODO make a delete_row function for rubberbandtables
+        """Function finds everything related to a row in a table and deletes them then the row in the table itself"""
+        for i in self.self_connective_table_list:
             i.multi_delete(foreign_key, id)
         for i in self.connective_table_list:
             i.multi_delete(self.foreign_key_name, id)
         self.delete_row(id)
-
-
-
-
 
 classes_table = EndCapTable("classes", 'class_id', 'class_name')
 background_table = EndCapTable("background", 'background_id', 'background_name')

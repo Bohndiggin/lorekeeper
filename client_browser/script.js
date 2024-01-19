@@ -1,3 +1,5 @@
+// const { default: axios } = require("axios")
+
 let actorButton = document.getElementById('dmdms-actor-btn')
 let factionButton = document.getElementById('dmdms-faction-btn')
 let locationButton = document.getElementById('dmdms-location-btn')
@@ -13,6 +15,11 @@ worldDataButton.onclick = ev => {sendSignal('/world-data')};
 console.log('listening')
 
 function writeTable(response, endpoint){
+    let addButtonArea = document.getElementById('add-one-button')
+    addButtonArea.innerHTML = ''
+    addButtonArea.innerHTML = `<button id='add-item'>+</button>`
+    let addButton = document.getElementById('add-item')
+    addButton.onclick = ev => {console.log('add somethin')} // Button will bring up form to fill out for the table. Query for data needed??
     let displayArea = document.getElementById('object-display')
     displayArea.innerHTML = ''
     let keys = Object.keys(response.data[0])
@@ -86,7 +93,7 @@ function writeOne(data) {
         singleDisplay.innerHTML += `</ul>`
     }
     // console.log(relatedValues)
-}   
+}
 function sendOneSignal(endpoint) {
     const dmdmsconn = "http://127.0.0.1:8000";
     console.log(endpoint)
@@ -101,3 +108,9 @@ function sendSignal(endpoint) {
         .then((response) => writeTable(response, endpoint))
         .catch((error) => console.log(error))
 }
+
+// function sendPost(endpoint, body) {
+//     const dmdmsconn = "http://127.0.0.1:8000";
+//     console.log(endpoint)
+//     axios.post(dmdmsconn + endpoint,)
+// }
