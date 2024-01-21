@@ -1,7 +1,84 @@
-h1, h2, h3, p, button {
+html {
+    background-color: #f3ebdb;
+}
+
+h1, h2, h3, p, button, table, li {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+nav {
+    position: relative;
+}
+
+h1, h2, h3, p, li {
+    margin-left: 5px;
+    margin-top: 5px;
 }
 
 h1 {
     font-size: 48pt;
+    color: #8da683;
+}
+
+h2 {
+    font-size: 36pt;
+    color: #d99d29;
+    border-bottom: solid;
+    border-color: black;
+    border-width: 2px;
+}
+
+h3 {
+    font-size: 24pt;
+    color: #d4a648;
+    border-bottom: solid;
+    border-width: 1px;
+    border-color: black;
+    width: 100%;
+}
+
+b {
+    font-weight: 700;
+}
+
+li {
+    list-style-type: none;
+    font-size: 12pt;
+    padding: auto;
+    margin-top: 5px;
+    margin-left: 40px;
+}
+
+li:before {
+    content: '›';
+    margin-left: -20px;
+    margin-right: 10px;
+}
+
+td, th {
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+#add-item {
+    color: #8da683;
+    height: 50px;
+    width: 50px;
+    font-size: 40px;
+}
+
+#object-display {
+    overflow-x: auto;
+}
+
+button {
+    background-color: #be8f3c;
+}
+
+table {
+    background-color: #f2dcb1;
+}
+
+table > button {
+    background-color: #be8f3c;
 }

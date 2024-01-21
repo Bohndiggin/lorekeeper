@@ -17,7 +17,10 @@ console.log('listening')
 function writeTable(response, endpoint){
     let addButtonArea = document.getElementById('add-one-button')
     addButtonArea.innerHTML = ''
-    addButtonArea.innerHTML = `<button id='add-item'>+</button>`
+    addButtonArea.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" id="add-item" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+    </svg>`
     let addButton = document.getElementById('add-item')
     addButton.onclick = ev => {console.log('add somethin')} // Button will bring up form to fill out for the table. Query for data needed??
     let displayArea = document.getElementById('object-display')
@@ -64,17 +67,17 @@ function writeOne(data) {
     // console.log(overview)
     singleDisplay.innerHTML += '<h2>Overview</h2><ul>'
     for (const property in overview) {
-        singleDisplay.innerHTML += `<li>${property}: ${overview[property]}</li>`
+        singleDisplay.innerHTML += `<li><b>${formatNormal(property)}:</b> ${overview[property]}</li>`
     }
     singleDisplay.innerHTML += '</ul>'
     singleDisplay.innerHTML += '<h2>Traits</h2>'
     for (const property in traits) {
-        singleDisplay.innerHTML += `<h3>${property}</h3><ul>`
+        singleDisplay.innerHTML += `<h3>${formatNormal(property)}</h3><ul>`
         let currentTrait = traits[property] // this is where we'll ask for a name to make a card?
         for (let i = 0;i<currentTrait.length;i++) {
             let currentItem = currentTrait[i]
             for (const j in currentItem) {
-                singleDisplay.innerHTML += `<li>${j}: ${currentItem[j]}</li>`
+                singleDisplay.innerHTML += `<li><b>${formatNormal(j)}:</b> ${currentItem[j]}</li>`
             }
         }
         singleDisplay.innerHTML += `</ul>`
@@ -82,12 +85,12 @@ function writeOne(data) {
     singleDisplay.innerHTML += '<h2>Related</h2><ul>'
     // console.log(related)
     for (const property in related) {
-        singleDisplay.innerHTML += `<h3>${property}</h3><ul>`
+        singleDisplay.innerHTML += `<h3>${formatNormal(property)}</h3><ul>`
         let currentProperty = related[property] //this is where we'll ask for an event name to make the card
         for (const i in currentProperty) {
             let currentItem = currentProperty[i]
             for (const j in currentItem) {
-                singleDisplay.innerHTML += `<li>${j}: ${currentItem[j]}</li>`
+                singleDisplay.innerHTML += `<li><b>${formatNormal(j)}:</b> ${currentItem[j]}</li>`
             }
         }
         singleDisplay.innerHTML += `</ul>`
@@ -109,8 +112,13 @@ function sendSignal(endpoint) {
         .catch((error) => console.log(error))
 }
 
-// function sendPost(endpoint, body) {
-//     const dmdmsconn = "http://127.0.0.1:8000";
-//     console.log(endpoint)
-//     axios.post(dmdmsconn + endpoint,)
-// }
+function formatNormal(string) {
+    let stringArr = string.split('_')
+    let formattedArr = []
+    for (let i = 0;i<stringArr.length;i++) {
+        let word = stringArr[i]
+        word = word[0].toUpperCase() + word.slice(1).toLowerCase()
+        formattedArr.push(word)
+    }
+    return formattedArr.join(' ')
+}
