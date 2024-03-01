@@ -49,14 +49,14 @@ class Pg_Table:
     def __init__(self, table_name:str, table_id_name:str='id') -> None:
         self.table_name = table_name
         self.columns = self._find_column_names(self.table_name)
-        insert_query_variables = str(tuple(self.columns)).replace("\'", "")
+        post_query_variables = str(tuple(self.columns)).replace("\'", "")
         insert_query_values = str("{}, "*len(self.columns))[:-2]
-        self.insert_query = self._build_post_query(insert_query_variables, insert_query_values)
+        self.post_query = self._build_post_query(post_query_variables)
         # self.select_10_query = generic_select_query.format(self.table_name)
         self.table_id_name = table_id_name
 
     def _find_column_names(self, table_name:str) -> list:
-        """Queries the database and gets the column names sans the id then returns them as a list"""
+        """Queries the database and gets the column names sans the id then returns them as a list (minus the ID)"""
         conn = pg.connect(db_url)
         curs = conn.cursor()
         curs.execute(f"SELECT * FROM {table_name} LIMIT 0;")
@@ -65,30 +65,31 @@ class Pg_Table:
         conn.close()
         return column_names[1:]
 
-    def _build_post_query(self, insert_query_variables, insert_query_values) -> sql.SQL:
+    def _build_post_query(self, post_query_variables) -> sql.SQL:
         """Private Function builds out the default/template query for posting data"""
+        post_query_values_named = ''
+        for i in self.columns :
+            post_query_values_named += '{'
+            post_query_values_named += i
+            post_query_values_named += "}, "
+        post_query_values_named = post_query_values_named[:-2]
         query_full = f"""
-            INSERT INTO {self.table_name} {insert_query_variables}
-            VALUES ({insert_query_values})
+            INSERT INTO {self.table_name} {post_query_variables}
+            VALUES ({post_query_values_named})
         """
         query_SQL = sql.SQL(query_full)
-        # print(query_SQL)
         return query_SQL
 
-    def post_data(self, data:list) -> list:
+    def post_data(self, data) -> list:
         """This Function uses the build_insert_query sql.SQL and a list of lists to add rows to the data"""
         data_returned = []
-        for i in data:
-            if len(i) != len(self.columns):
-                error_message_dict = {}
-                error_message_dict[data.index(i)] = 'ERROR: list length too short to process'
-                data_returned += error_message_dict
-                continue
-            current_data = [sql.Literal(j) for j in i]
-            current_query = self.insert_query
-            current_query = current_query.format(*current_data)
-            # print(current_query)
-            data_returned += make_curs_query_commit(current_query)
+        print(data)
+        data = dict(data)
+        current_query = self.post_query
+        for key, value in data.items():
+            data[key] = sql.Literal(value)
+        current_query = current_query.format(**data)
+        data_returned += make_curs_query_commit(current_query)
         return data_returned
 
 class InteractiveTable(Pg_Table):
@@ -133,6 +134,10 @@ class InteractiveTable(Pg_Table):
             'table_name': sql.Identifier(self.table_name)
         }
         answer = query_to_answer(query, query_object)
+        for i in answer:
+            i['proper_name'] = i[self.proper_name]
+            del i[self.proper_name]
+        print(answer)
         return answer
 
     def get_item_name(self, id:int) -> str:

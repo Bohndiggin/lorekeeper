@@ -4,69 +4,12 @@ import psycopg2.extras
 import os, json
 from datetime import datetime
 import utils
-from pydantic import BaseModel
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-
-description = """
-Lorekeeper is a new app to manage the lore of your stories.
-
-
-## History
-Initially designed as a tool for a Dungeon Master, Lorekeeper aims to be the be all end all of lore managment.
-
-## Components
-Lorekeeper consists of a few elements.
-
-- A PostreSQL sever to store the lore.
-- A server (this file) to handle reqests to and from.
-- A few seperate front ends
-    1. a Foundry VTT module so users can access the lore from remotely
-    2. a locally hosted webpage for exploring lore
-    3. TODO: a desktop app for quickly adding lore to the database.
-
-## Usage
-
-The storyteller/DM can explore lore and add new entries to the database.
-
-TODO: Entries can be linked in logical ways.
-
-Operation should be as simple as Salesforce.
-
-## Installation
-
-**COMING SOON**
-"""
-
-
-tags_metadata = [
-    {
-        'name': 'Actors',
-        'description': 'Actors are players/NPCs both are represented here.'
-    },
-    {
-        'name': 'Faction',
-        'description': 'Factions are the groups that vie for power.'
-    },
-    {
-        'name': 'Location',
-        'description': 'Locations include cities, dungeons, any place really.'
-    },
-    {
-        'name': 'Historical Fragments',
-        'description': 'Historical Fragments are events that happened. They are split into single events for simplicity.'
-    },
-    {
-        'name': 'Objects',
-        'description': 'Objects are well, things.'
-    },
-    {
-        'name': 'World Data',
-        'description': 'World Data is lore that is constant eg: magic exists.'
-    }
-]
+from server_classes import *
 
 load_dotenv()
 
@@ -100,10 +43,6 @@ origins = [
     '*'
 ]
 
-class RequestBodyList(BaseModel):
-    items_list: list
-    # timestamp: datetime
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -122,8 +61,8 @@ async def actor_get():
     return utils.actor_table.query_get_10()
 
 @app.post('/actor', tags=['Actors'])
-async def actor_post(body:RequestBodyList):
-    return utils.actor_table.post_data(body.items_list)
+async def actor_post(body:ActorPostRequest):
+    return utils.actor_table.post_data(body)
 
 @app.get('/actor-names', tags=['Actors'])
 async def actor_get_names():
@@ -142,8 +81,12 @@ async def faction_get():
     return utils.faction_table.query_get_10()
 
 @app.post('/faction', tags=['Faction'])
-async def faction_post(body:RequestBodyList):
-    return utils.actor_table.post_data(body.items_list)
+async def faction_post(body:FactionPostRequest):
+    return utils.actor_table.post_data(body)
+
+@app.get('/faction-names', tags=['Faction'])
+async def faction_get_names():
+    return utils.faction_table.get_all_named()
 
 @app.get('/faction/', tags=['Faction'])
 async def faction_get_one(id:int = 0):
@@ -158,8 +101,12 @@ async def location_get():
     return utils.location_table.query_get_10()
 
 @app.post('/location', tags=['Location'])
-async def location_post(body:RequestBodyList):
-    return utils.location_table.post_data(body.items_list)
+async def location_post(body:LocationPostRequest):
+    return utils.location_table.post_data(body)
+
+@app.get('/location-names', tags=['Location'])
+async def location_get_names():
+    return utils.location_table.get_all_named()
 
 @app.get('/location/', tags=['Location'])
 async def location_get_one(id:int = 0):
@@ -174,8 +121,12 @@ async def historical_fragments_get():
     return utils.historical_fragments_table.query_get_10()
 
 @app.post('/historical-fragments', tags=['Historical Fragments'])
-async def historical_fregments_post(body:RequestBodyList):
-    return utils.historical_fragments_table.post_data(body.items_list)
+async def historical_fregments_post(body:HistoricalFragmentsRequest):
+    return utils.historical_fragments_table.post_data(body)
+
+@app.get('/historical-fragments-names', tags=['Historical Fragments'])
+async def historical_fragments_get_names():
+    return utils.historical_fragments_table.get_all_named()
 
 @app.get('/historical-fragments/', tags=['Historical Fragments'])
 async def historical_fragments_get_one(id:int = 0):
@@ -186,8 +137,12 @@ async def object_get():
     return utils.object_table.query_get_10()
 
 @app.post('/object', tags=['Objects'])
-async def object_post(body:RequestBodyList):
-    return utils.object_table.post_data(body.items_list)
+async def object_post(body:ObjectRequest):
+    return utils.object_table.post_data(body)
+
+@app.get('/object-names', tags=['Objects'])
+async def object_get_names():
+    return utils.object_table.get_all_named()
 
 @app.get('/object/', tags=['Objects'])
 async def object_get_one(id:int = 0):
@@ -204,3 +159,11 @@ async def world_data_get():
 @app.get('/world-data/', tags=['World Data'])
 async def world_data_get_one(id:int = 0):
     return utils.world_data_table.query_one_by_id(id)
+
+@app.post('/world-data', tags=['World Data'])
+async def world_data_post(body:WorldDataRequest):
+    return utils.world_data_table.post_data(body)
+
+@app.get('/world-data-names', tags=['World Data'])
+async def world_data_get_names():
+    return utils.world_data_table.get_all_named()

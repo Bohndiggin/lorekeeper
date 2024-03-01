@@ -82,3 +82,15 @@ table {
 table > button {
     background-color: #be8f3c;
 }
+
+.add-btn-centered {
+    color: #8da683;
+    align-self: center;
+    width: 100vw;
+    height: 50px;
+    justify-self: center;
+}
+
+.add-btn-centered :hover {
+    color: black;
+}

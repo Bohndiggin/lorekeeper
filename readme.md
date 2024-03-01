@@ -75,7 +75,7 @@ How old the Actor is.
 ### class_id
 ID (as int) of class found in the class list.
 ### actor_level
-Int of the character's level overall.
+INT of the character's level overall.
 ### background_id
 ID (as int) of Background found in the Backgrounds table
 ### job
