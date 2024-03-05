@@ -4,10 +4,13 @@ import psycopg2.extras
 import os, csv
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from server_meta import *
 
 load_dotenv()
 db_url = os.getenv('CONNSTR')
 generic_select_query = sql.SQL('SELECT * FROM {} LIMIT 10;')
+
+all_tables: dict['Pg_Table'] = {}
 
 def open_csv_and_query(query:str, file_location:str, cursor:pg.extensions.cursor):
     with open(file_location) as f:
@@ -24,7 +27,6 @@ def unpack_answer(answer) -> list:
 
 def make_curs_and_query(query:sql.SQL) -> dict:
     with pg.connect(db_url) as conn:
-        # print(query)
         curs = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         curs.execute(query)
         result = curs.fetchall()
@@ -44,16 +46,47 @@ def query_to_answer(query:str, query_object:dict) -> list:
     answer = unpack_answer(packed_answer)
     return answer
 
+def clean_endpoint(endpoint:str) -> str:
+    no_slash = endpoint[1:]
+    underscores = no_slash.replace('-', '_')
+    with_table = underscores + '_table'
+    return with_table
+
+def clean_table(table_name:str) -> str:
+    underscores = table_name.replace('-', '_')
+    with_table = underscores + '_table'
+    no_dunder = with_table.replace('__', '_')
+    return no_dunder
+
+def recieve_connective_post(body:PostDataRequest):
+    target_table = clean_endpoint(body.currentOpen['table'])
+    target_a = body.currentOpen['item']
+    target_connection = clean_table(body.currentOpen['connective_table'])
+    target_b = body.selectedId
+    query_attempt = [
+        target_table,
+        target_a,
+        target_connection,
+        target_b
+    ]
+    print(query_attempt)
+    print(all_tables[target_table])
+    print(all_tables[target_table].connective_table_dict[target_connection].table_name)
+    all_tables[target_table].call_connected_table(all_tables[target_table].connective_table_dict[target_connection], target_a, target_b)
+    return [body, 'sucess']
+
 class Pg_Table:
     """Basic Table Parent Class"""
     def __init__(self, table_name:str, table_id_name:str='id') -> None:
         self.table_name = table_name
         self.columns = self._find_column_names(self.table_name)
         post_query_variables = str(tuple(self.columns)).replace("\'", "")
-        insert_query_values = str("{}, "*len(self.columns))[:-2]
         self.post_query = self._build_post_query(post_query_variables)
         # self.select_10_query = generic_select_query.format(self.table_name)
         self.table_id_name = table_id_name
+        table_name_var_name = table_name + '_table'
+        self.table_name_no_dunder = table_name_var_name.replace('__', '_')
+        all_tables[self.table_name_no_dunder] =  self
 
     def _find_column_names(self, table_name:str) -> list:
         """Queries the database and gets the column names sans the id then returns them as a list (minus the ID)"""
@@ -81,7 +114,7 @@ class Pg_Table:
         return query_SQL
 
     def post_data(self, data) -> list:
-        """This Function uses the build_insert_query sql.SQL and a list of lists to add rows to the data"""
+        """This Function uses the build_insert_query sql.SQL and a dict with keywords to add a row to the database"""
         data_returned = []
         print(data)
         data = dict(data)
@@ -89,8 +122,54 @@ class Pg_Table:
         for key, value in data.items():
             data[key] = sql.Literal(value)
         current_query = current_query.format(**data)
-        data_returned += make_curs_query_commit(current_query)
-        return data_returned
+        print(current_query)
+        # data_returned += make_curs_query_commit(current_query)
+        return #data_returned
+
+    def get_columns(self) -> list:
+        """Function to get a list of columns so you can make sure user is supplying all the needed data"""
+        """TODO add data types."""
+        conn = pg.connect(db_url)
+        with pg.connect(db_url) as conn:
+            curs = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            curs.execute("""
+                select cols.column_name, cols.data_type, cols.table_name, kcu.column_name
+                FROM information_schema.columns cols
+                LEFT JOIN information_schema.table_constraints tc
+                    ON cols.table_name = tc.table_name
+                    AND cols.table_schema = tc.table_schema
+                LEFT JOIN information_schema.key_column_usage kcu
+                    ON tc.constraint_name = kcu.constraint_name
+                    AND tc.table_schema = kcu.table_schema
+                LEFT JOIN information_schema.constraint_column_usage ccu
+                    ON ccu.constraint_name = tc.constraint_name
+                where cols.table_schema NOT IN ('information_schema', 'pg_catalog')
+                order by cols.table_schema, cols.table_name;"""
+            )
+            columns_and_types = {}
+            columns_and_types['foreign_keyed'] = {}
+            for row in curs:
+                if row['table_name'] == self.table_name:
+                    if row['column_name']:
+                        columns_and_types['foreign_keyed'][row['column_name']] = [row['data_type'], row['column_name']]
+
+            curs.execute("""
+                SELECT *
+                    FROM information_schema.columns cols
+                    LEFT JOIN information_schema.table_constraints tc
+                    ON cols.table_name = tc.table_name
+                    AND cols.table_schema = tc.table_schema
+                    where cols.table_schema NOT IN ('information_schema', 'pg_catalog')
+                    order by cols.table_schema, cols.table_name;
+            """)
+            columns_and_types['non_foreign'] = {}
+            for row in curs:
+                if row['table_name'] == self.table_name and str(row['column_name']) not in columns_and_types['foreign_keyed'].keys():
+                    columns_and_types['non_foreign'][row['column_name']] = [row['data_type']]
+            conn.commit()
+
+        # print(columns_and_types)
+        return columns_and_types
 
 class InteractiveTable(Pg_Table):
     """Parent class for tables that will be directly interacted with by the user."""
@@ -137,7 +216,6 @@ class InteractiveTable(Pg_Table):
         for i in answer:
             i['proper_name'] = i[self.proper_name]
             del i[self.proper_name]
-        print(answer)
         return answer
 
     def get_item_name(self, id:int) -> str:
@@ -247,6 +325,9 @@ class QueryableTable(InteractiveTable):
     def connect_to_connective_tables(self, middle_table_list:list) -> None:
         """Function connects this table to middle/joining tables"""
         self.connective_table_list = [table for table in middle_table_list if type(table) == ConnectiveTable]
+        self.connective_table_dict = {}
+        for i in self.connective_table_list:
+            self.connective_table_dict[i.table_name_no_dunder] = i
 
     def connect_to_self_connective_tables(self, self_connective_tables:list):
         """Function connects this table to rubberbanding tables"""
@@ -301,7 +382,18 @@ class QueryableTable(InteractiveTable):
         answer['traits'] = self.multi_dual_query(id)
         answer['related'] = self.multi_tri_query(id)
         return answer
-    
+
+    def call_connected_table(self, selected_table:ConnectiveTable, self_id:int, ext_id:int):
+        """function takes in a specific table that it is connected to and will call that table's post_data function passing in the correct ids"""
+        post_data = {}
+
+        if selected_table.first_table == self:
+            post_data[selected_table.second_table.foreign_key_name] = ext_id
+        if selected_table.second_table == self:
+            post_data[selected_table.first_table.foreign_key_name] = ext_id
+        post_data[self.foreign_key_name] = self_id
+        return selected_table.post_data(post_data)
+
     def delete_row_w_dependancies(self, foreign_key:str, id:int):
         """Function finds everything related to a row in a table and deletes them then the row in the table itself"""
         for i in self.self_connective_table_list:
@@ -361,3 +453,5 @@ object_table.connect_to_connective_tables([involved_history_object_table, object
 
 world_data_table.connect_to_endcaps([])
 world_data_table.connect_to_connective_tables([involved_history_world_data_table])
+
+print(actor_table.get_columns())

@@ -6,14 +6,41 @@ h1, h2, h3, p, button, table, li {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+body {
+    padding-top: 128px;
+}
+
 nav {
-    position: relative;
+    /* position: absolute; */
+    display: flex;
+    width: 100vw;
+    justify-content: space-around;
+}
+
+#ultra-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+#outer-header {
+    position: fixed;
+    display: inline;
+    top: 0;
+    width: 100vw;
+    background-color: #f3ebdb;
+    height: 128px;
+    z-index: 999;
+}
+
+#ultra-header svg {
+    margin: 15px;
 }
 
 h1, h2, h3, p, li {
     margin-left: 5px;
     margin-top: 5px;
 }
+
 
 h1 {
     font-size: 48pt;
@@ -41,6 +68,15 @@ b {
     font-weight: 700;
 }
 
+nav button {
+    width: calc(100vw / 6);
+    border-radius: 0;
+}
+
+table {
+    min-width: 100vw;
+}
+
 li {
     list-style-type: none;
     font-size: 12pt;
@@ -58,6 +94,9 @@ li:before {
 td, th {
     padding-top: 10px;
     padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    vertical-align: middle;
 }
 
 #add-item {
@@ -73,6 +112,16 @@ td, th {
 
 button {
     background-color: #be8f3c;
+    border-radius: 5px;
+    border: 0;
+    width: auto;
+    height: 3rem;
+    min-width: 50px;
+}
+
+#add-one-button {
+    display: flex;
+    justify-content: center;
 }
 
 table {
@@ -93,4 +142,81 @@ table > button {
 
 .add-btn-centered :hover {
     color: black;
+}
+
+.popup {
+    position: fixed;
+    display: flex;
+}
+
+.popup h2 {
+    margin: 0;
+    width: 50vw;
+    display: flex;
+    align-self: flex-start;
+}
+
+#popupbkg {
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.247);
+    align-items: center;
+    justify-content: center;
+}
+
+#popup-window {
+    width: 50vw;
+    height: 50vw;
+    max-width: 50vw;
+    margin-left: 25vw;
+    margin-top: 50vh;
+    max-height: 200px;
+    align-self: center;
+    justify-self: center;
+    background-color: white;
+    border-radius: 15px;
+}
+
+#popup-content {
+    display: flex;
+    align-items: center;
+    position: relative;
+    flex-direction: column;
+}
+
+#popup-right {
+    display: flex;
+    position: relative;
+    margin-top: 50px;
+}
+
+#submit-to-table {
+    display: flex;
+    position: relative;
+    align-self: center;
+    font-size: 2rem;
+}
+
+button:hover {
+    background-color: #bd9757;
+}
+
+label {
+    font-size: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    align-self: center;
+}
+
+select {
+    height: 2rem;
+    align-self: center;
+    font-size: 1.75rem;
+}
+
+tr:hover {
+    background-color: #f3e3c3;
+}
+
+td:hover, th:hover {
+    background-color: #f3d69d;
 }

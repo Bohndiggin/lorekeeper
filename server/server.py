@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from server_classes import *
+from server_meta import *
 
 load_dotenv()
 
@@ -75,6 +75,10 @@ async def actor_get_one(id:int = 0):
 @app.delete('/actor/', tags=['Actors'])
 async def actor_delete_one(id:int):
     return utils.actor_table.delete_row_w_dependancies(id)
+
+@app.post('/actor/', tags=['Actors'])
+async def actor_post_related(body):
+    return body
 
 @app.get('/faction', tags=['Faction'])
 async def faction_get():
@@ -167,3 +171,15 @@ async def world_data_post(body:WorldDataRequest):
 @app.get('/world-data-names', tags=['World Data'])
 async def world_data_get_names():
     return utils.world_data_table.get_all_named()
+
+@app.post('/test-data-post')
+async def post_data_test(body:PostDataRequest):
+    return utils.recieve_connective_post(body)
+
+@app.get('/load-tables')
+async def load_table_data():
+    response = {}
+    for i in utils.all_tables.values():
+        column_data = i.get_columns()
+        response[i.table_name_no_dunder] = column_data
+    return response

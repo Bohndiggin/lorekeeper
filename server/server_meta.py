@@ -168,3 +168,7 @@ class ObjectRequest(BaseModel):
 class WorldDataRequest(BaseModel):
     data_name: str
     data_description: str
+
+class PostDataRequest(BaseModel):
+    currentOpen: dict
+    selectedId: int
