@@ -5,9 +5,6 @@ db/.env
 db/D_D.ompl
 client_python/.env
 db/D_D.opml
-db/seed.py
-db/utils.py
-db/db_test.py
 node_modules/
 client_fvtt/dmdms/.env
 .vscode

@@ -172,3 +172,6 @@ class WorldDataRequest(BaseModel):
 class PostDataRequest(BaseModel):
     currentOpen: dict
     selectedId: int
+
+class GetEndcapDataRequest(BaseModel):
+    targetEndcap: str

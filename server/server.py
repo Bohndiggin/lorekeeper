@@ -176,6 +176,11 @@ async def world_data_get_names():
 async def post_data_test(body:PostDataRequest):
     return utils.recieve_connective_post(body)
 
+
+@app.post('/query-endcaps')
+async def get_endcap_data(body:GetEndcapDataRequest):
+    return utils.all_tables[body.targetEndcap].get_all_named()
+
 @app.get('/load-tables')
 async def load_table_data():
     response = {}

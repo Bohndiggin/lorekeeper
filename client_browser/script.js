@@ -1,5 +1,3 @@
-// const { response } = require("express")
-
 let actorButton = document.getElementById('dmdms-actor-btn')
 let factionButton = document.getElementById('dmdms-faction-btn')
 let locationButton = document.getElementById('dmdms-location-btn')
@@ -63,7 +61,7 @@ function writeTable(response, endpoint){
         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
     </svg>`
     let addButton = document.getElementById('add-item')
-    addButton.onclick = ev => {console.log('add somethin')} // Button will bring up form to fill out for the table. Query for data needed??
+    addButton.onclick = ev => {addButtonTopFunction()} // Button will bring up form to fill out for the table. Query for data needed??
     let displayArea = document.getElementById('object-display')
     displayArea.innerHTML = ''
     let keys = Object.keys(response.data[0])
@@ -95,7 +93,6 @@ function writeTable(response, endpoint){
         // console.log(`${values[0]}-${values[1]}`)
         let idClean = values[1].split(' ').join('')
         let buttonTemp = document.getElementById(`${values[0]}-${idClean}`)
-        console.log(buttonTemp)
         let idNum = values[0]
         buttonTemp.onclick = ev => {
             sendOneSignal(`${endpoint}/?id=${idNum}`, idNum)
@@ -143,16 +140,17 @@ function writeOne(data, idNum) {
     }
     for (const property in related) {
         let addRelatedPropertyTemp = document.getElementById(`add-${property}`)
-        console.log(addRelatedPropertyTemp)
         addRelatedPropertyTemp.onclick = ev => {
-            openAddingWindow(property)
+            currentOpen['connective_table'] = property
+            let tableNameTarget = property + "_table"
+            tableNameTarget = tableNameTarget.replace('__', '_')
+            popupBuilderArbiter(tableNameTarget)
         }
     }
     // console.log(relatedValues)
 }
 function sendOneSignal(endpoint, idNum) {
     const dmdmsconn = "http://127.0.0.1:8000";
-    console.log(endpoint)
     axios.get(dmdmsconn + endpoint)
         .then((response) => writeOne(response.data, idNum))
         .catch((error) => console.log(error))
@@ -161,7 +159,6 @@ function sendSignal(endpoint) {
     let singleDisplay = document.getElementById('single-display')
     singleDisplay.innerHTML = '';
     const dmdmsconn = "http://127.0.0.1:8000";
-    console.log(endpoint)
     axios.get(dmdmsconn + endpoint)
         .then((response) => writeTable(response, endpoint))
         .catch((error) => console.log(error))
@@ -171,38 +168,37 @@ function writePopup(response, currentWork) {
     let popUpWindow = document.getElementById('popup')
     popUpWindow.innerHTML = ``
     let listOfNames = response.data
-    console.log(listOfNames)
     for (let i = 0;i<listOfNames.length;i++) {
         currentWork += `<option value='${listOfNames[i].id}'>${listOfNames[i].proper_name}</option>`
     }
     currentWork += `</div>`
     currentWork += `</select><button class='popup' id='submit-to-table'>Submit</button>`
     popUpWindow.innerHTML = currentWork
-    console.log(currentWork) //TODO add button to popup and be sure to pass along the id of the current selected so we can get the right thing added to the right table
+    //console.log(currentWork) //TODO add button to popup and be sure to pass along the id of the current selected so we can get the right thing added to the right table
     let submitButton = document.getElementById('submit-to-table')
-    console.log(submitButton)
+    //console.log(submitButton)
     submitButton.onclick = ev => {
         let selectionBox = document.getElementById('selection')
         postToConnectiveTable(selectionBox.value)
     }
     let popupBackground = document.getElementById('popupbkg')
     popupBackground.onclick = ev => {
-        console.log('click')
+        // console.log('click')
         closeAddingWindow()
     }
 }
 
-function populateDropDown(currentWork) { //Function queries for the proper names for everything in a table to populate dropdown menus
-    // console.log("currentTable: " + currentTable);
-    const dmdmsconn = "http://127.0.0.1:8000";
-    endpoint = relationMap[currentOpen['table']][currentOpen['connective_table']]
-    console.log('ENDPOINT ' + endpoint)
-    axios.get(dmdmsconn + endpoint)
-        .then((response) => {
-            writePopup(response, currentWork)
-        })
-        .catch((error) => console.log(error))
-};
+// function populateDropDown(currentWork) { //Function queries for the proper names for everything in a table to populate dropdown menus
+//     // console.log("currentTable: " + currentTable);
+//     const dmdmsconn = "http://127.0.0.1:8000";
+//     endpoint = relationMap[currentOpen['table']][currentOpen['connective_table']]
+//     // console.log('ENDPOINT ' + endpoint)
+//     axios.get(dmdmsconn + endpoint)
+//         .then((response) => {
+//             writePopup(response, currentWork)
+//         })
+//         .catch((error) => console.log(error))
+// };
 
 function formatNormal(string) {
     let stringArr = string.split('_')
@@ -215,23 +211,23 @@ function formatNormal(string) {
     return formattedArr.join(' ')
 }
 
-function openAddingWindow(connTable) {// TODO add function to write dropdown/inputs based on the return of the previous function
-    currentOpen['connective_table'] = connTable
-    let popUpWindow = document.getElementById('popup')
-    popUpWindow.innerHTML = ``
-    let popUpWindowBuild = `
-    <div class="popup", id='popupbkg'>
-    </div>
-    <div class="popup", id='popupbkg2'>
-        <div class="popup" id="popup-window">
-            <div class="popup" id="popup-content">
-                <h2>CONNECT TO</h2>
-                <div class="popup right" id='popup-right'>
-                    <label for="selection">Join with:</label>
-    `
-    popUpWindowBuild += `<select name="selection" id="selection">`
-    populateDropDown(popUpWindowBuild)
-}
+// function openAddingWindow(connTable) {// TODO add function to write dropdown/inputs based on the return of the previous function
+//     currentOpen['connective_table'] = connTable
+//     let popUpWindow = document.getElementById('popup')
+//     popUpWindow.innerHTML = ``
+//     let popUpWindowBuild = `
+//     <div class="popup", id='popupbkg'>
+//     </div>
+//     <div class="popup", id='popupbkg2'>
+//         <div class="popup" id="popup-window">
+//             <div class="popup" id="popup-content">
+//                 <h2>CONNECT TO</h2>
+//                 <div class="popup right" id='popup-right'>
+//                     <label for="selection">Join with:</label>
+//     `
+//     popUpWindowBuild += `<select name="selection" id="selection">`
+//     populateDropDown(popUpWindowBuild)
+// }
 
 function closeAddingWindow() {
     let popUpWindow = document.getElementById('popup')
@@ -246,16 +242,17 @@ function postToConnectiveTable(selectedID) { // TODO Add function to server.py t
     }
     axios.post(loreconn + '/test-data-post', postData)
         .then(response => {
-            console.log(response)
+            // console.log(response)
         })
         .catch((error) => console.log(error))
 }
 
 function dropdownBuilder(htmlString, dataList, dataName) {
-    // htmlString += `<label for="selection">Join with:</label>`
-    htmlString += `<select name="selection" id="selection-${dataName}">`
-    for (const item in dataList) {
-        htmlString += `<option value='${item.id}'>${item.proper_name}</option>`
+    htmlString += `<label for="${dataName}">${formatNormal(dataName)}:</label>`
+    htmlString += `<select name="${dataName}" id="selection-${dataName}">`
+    console.log(dataList)
+    for (let i = 0;i<dataList.length;i++) {
+        htmlString += `<option value='${dataList[i].id}'>${dataList[i].proper_name}</option>`
     }
     htmlString += `</select>`
     return htmlString
@@ -263,27 +260,112 @@ function dropdownBuilder(htmlString, dataList, dataName) {
 
 function storeTables(dict) {
     tableData = dict.data
-    console.log('TABLE DATA STORED')
-    console.log(tableData)
+    console.log('TABLE DATA LOADED')
+    // console.log(tableData)
 }
 
 function loadTables() {
     const loreconn = "http://127.0.0.1:8000";
+    console.log('Loading Table Data') //TODO Insert Loading bar
     axios.get(loreconn + '/load-tables')
         .then((response) => {
-            console.log('Loading Table Data') //TODO Insert Loading bar
             storeTables(response)
         })
         .catch((error) => console.log(error))
 
 }
 
-function inputBoxBuilder(htmlString, tableIdStr, dataNameStr, dataType) {
-    htmlString += `<label>${dataNameStr}</label>`
+async function getEndcapData(key) {
+    const loreconn = "http://127.0.0.1:8000";
+    let targetTable = key.slice(0, key.length -3) + '_table'
+    // console.log(typeof(targetTable))
+    let GetEndcapDataRequest = {
+        'targetEndcap': targetTable
+    }
+    // console.log(GetEndcapDataRequest)
+    return await axios.post(loreconn + '/query-endcaps', GetEndcapDataRequest)
+        .then(response => {
+            return response.data;
+        })
+        .catch(error => console.log(error.response))
 }
 
-function popupBuilderArbiter(formDataNeeded) {
-    
+async function getConnectiveData(key) {
+    const loreconn = "http://127.0.0.1:8000";
+    let endpoint = relationMap[currentOpen['table']][currentOpen['connective_table']];
+    console.log(endpoint)
+    return await axios.get(loreconn + endpoint)
+        .then(data => {return data})
+        .catch(err => console.log(err))
 }
+
+function inputBoxBuilder(dataNameStr) {
+    let htmlString = `<label for="${dataNameStr}">${formatNormal(dataNameStr)}</label>`
+    htmlString += `<input type="text" id="${dataNameStr}-input"/>`
+    return htmlString
+}
+
+async function extraDataQuerier(currentRequested) {
+    let htmlWork = ``
+    console.log(currentRequested['foreign_keyed'])
+    for (const [key, value] of Object.entries(currentRequested['foreign_keyed'])) {
+        if (value[0] == 'integer'){
+            if (value[1] != 'id' && value[1] != currentOpen['table'].slice(1) + '_id') {
+                let returnedData = await getConnectiveData(value[1]).then(data => {return data})
+                htmlWork += dropdownBuilder('', returnedData.data, value[1])
+            }
+        } else if (value[0] == 'text') {
+            if (value[1] != 'id') {
+                let returnedData = await getEndcapData(value[1]).then(data => {return data})
+                htmlWork += dropdownBuilder('', returnedData, value[1])
+            }
+            console.log('text')
+        } else if (value[0] == 'character varying') {
+            console.log('varchar')
+        } else {
+            console.log("NOT FOUND: " + value)
+        }
+    }
+    return htmlWork
+}
+
+
+async function popupBuilderArbiter(tableSelected) {
+    let popUpWindow = document.getElementById('popup')
+    let currentRequested = tableData[tableSelected]
+    htmlString = `
+    <div class="popup", id='popupbkg'>
+    </div>
+    <div class="popup", id='popupbkg2'>
+        <div class="popup" id="popup-window">
+            <div class="popup" id="popup-content">
+                <h2>CONNECT TO</h2>
+                <div class="popup right" id='popup-right'>
+    `
+    try {
+        for (const [key, value] of Object.entries(currentRequested['non_foreign'])) {
+            htmlString += inputBoxBuilder(key)
+        }
+        htmlString += await extraDataQuerier(currentRequested)
+    } catch (error) {
+        console.log(error)
+    }
+
+
+    htmlString += `</div></div></div></div>`
+    popUpWindow.innerHTML = htmlString
+    let popupBackground = document.getElementById('popupbkg')
+    popupBackground.onclick = ev => {
+        closeAddingWindow()
+    }
+    return htmlString
+}
+
+function addButtonTopFunction() {
+    let table = currentOpen['table'].slice(1) + '_table'
+    table = table.replace('__', '_')
+    popupBuilderArbiter(table)
+}
+
 
 loadTables()

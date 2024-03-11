@@ -165,16 +165,19 @@ table > button {
 }
 
 #popup-window {
-    width: 50vw;
-    height: 50vw;
-    max-width: 50vw;
+    width: fit-content;
+    height: fit-content;
+    max-width: fit-content;
+    padding: 10px;
     margin-left: 25vw;
-    margin-top: 50vh;
-    max-height: 200px;
-    align-self: center;
+    max-height: 86vh;
+    align-self: top;
+    margin-top: 1vh;
     justify-self: center;
     background-color: white;
     border-radius: 15px;
+    display: flex;
+    overflow: auto;
 }
 
 #popup-content {
@@ -188,6 +191,7 @@ table > button {
     display: flex;
     position: relative;
     margin-top: 50px;
+    flex-direction: column;
 }
 
 #submit-to-table {

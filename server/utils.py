@@ -75,6 +75,9 @@ def recieve_connective_post(body:PostDataRequest):
     all_tables[target_table].call_connected_table(all_tables[target_table].connective_table_dict[target_connection], target_a, target_b)
     return [body, 'sucess']
 
+def get_endcaps(body):
+    pass
+
 class Pg_Table:
     """Basic Table Parent Class"""
     def __init__(self, table_name:str, table_id_name:str='id') -> None:
@@ -402,7 +405,7 @@ class QueryableTable(InteractiveTable):
             i.multi_delete(self.foreign_key_name, id)
         self.delete_row(id)
 
-classes_table = EndCapTable("classes", 'class_id', 'class_name')
+class_table = EndCapTable("class", 'class_id', 'class_name')
 background_table = EndCapTable("background", 'background_id', 'background_name')
 race_table = EndCapTable("race", 'race_id', 'race_name')
 sub_race_table = EndCapTable("sub_race", 'sub_race_id', 'sub_race_name')
@@ -434,7 +437,7 @@ involved_history_world_data_table = ConnectiveTable('involved_history_world_data
 
 # Here we connect up the tables
 
-actor_table.connect_to_endcaps([classes_table, background_table, race_table, sub_race_table])
+actor_table.connect_to_endcaps([class_table, background_table, race_table, sub_race_table])
 actor_table.connect_to_connective_tables([faction_members_table, residents_table, involved_history_actor_table])
 
 
