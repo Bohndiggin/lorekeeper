@@ -44,12 +44,12 @@ h1, h2, h3, p, li {
 
 h1 {
     font-size: 48pt;
-    color: #8da683;
+    color: #8fa6b0;
 }
 
 h2 {
     font-size: 36pt;
-    color: #d99d29;
+    color: #485c62;
     border-bottom: solid;
     border-color: black;
     border-width: 2px;
@@ -57,7 +57,7 @@ h2 {
 
 h3 {
     font-size: 24pt;
-    color: #d4a648;
+    color: #485c62;
     border-bottom: solid;
     border-width: 1px;
     border-color: black;
@@ -111,7 +111,7 @@ td, th {
 }
 
 button {
-    background-color: #be8f3c;
+    background-color: #8b5d33;
     border-radius: 5px;
     border: 0;
     width: auto;
@@ -133,7 +133,7 @@ table > button {
 }
 
 .add-btn-centered {
-    color: #8da683;
+    color: #485c62;
     align-self: center;
     width: 100vw;
     height: 50px;

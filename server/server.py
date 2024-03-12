@@ -121,20 +121,20 @@ async def loctaion_delete_one(id:int):
     return utils.location_table.delete_row_w_dependancies(id)
 
 @app.get('/historical-fragments', tags=['Historical Fragments'])
-async def historical_fragments_get():
-    return utils.historical_fragments_table.query_get_10()
+async def historical_fragment_get():
+    return utils.historical_fragment_table.query_get_10()
 
 @app.post('/historical-fragments', tags=['Historical Fragments'])
 async def historical_fregments_post(body:HistoricalFragmentsRequest):
-    return utils.historical_fragments_table.post_data(body)
+    return utils.historical_fragment_table.post_data(body)
 
 @app.get('/historical-fragments-names', tags=['Historical Fragments'])
-async def historical_fragments_get_names():
-    return utils.historical_fragments_table.get_all_named()
+async def historical_fragment_get_names():
+    return utils.historical_fragment_table.get_all_named()
 
 @app.get('/historical-fragments/', tags=['Historical Fragments'])
-async def historical_fragments_get_one(id:int = 0):
-    return utils.historical_fragments_table.query_one_by_id(id)
+async def historical_fragment_get_one(id:int = 0):
+    return utils.historical_fragment_table.query_one_by_id(id)
 
 @app.get('/object', tags=['Objects'])
 async def object_get():

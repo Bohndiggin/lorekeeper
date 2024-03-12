@@ -423,17 +423,17 @@ location_city_districts_table = ConnectiveTable('location_city_districts', locat
 residents_table = ConnectiveTable('residents', location_table, actor_table)
 location_flora_fauna_table = "table type of end or something. not middle table but bookend typething"
 
-historical_fragments_table = QueryableTable('historical_fragments', 'historical_fragment_id', 'event_name')
-involved_history_actor_table = ConnectiveTable('involved_history_actor', historical_fragments_table, actor_table)
-involved_history_location_table = ConnectiveTable('involved_history_location', historical_fragments_table, location_table)
-involved_history_faction_table = ConnectiveTable('involved_history_faction', historical_fragments_table, faction_table)
+historical_fragment_table = QueryableTable('historical_fragment', 'historical_fragment_id', 'event_name')
+involved_history_actor_table = ConnectiveTable('involved_history_actor', historical_fragment_table, actor_table)
+involved_history_location_table = ConnectiveTable('involved_history_location', historical_fragment_table, location_table)
+involved_history_faction_table = ConnectiveTable('involved_history_faction', historical_fragment_table, faction_table)
 
 object_table = QueryableTable('object_', 'object_id', 'object_name')
-involved_history_object_table = ConnectiveTable('involved_history_object', object_table, historical_fragments_table)
+involved_history_object_table = ConnectiveTable('involved_history_object', object_table, historical_fragment_table)
 object_to_owner_table = ConnectiveTable('object_to_owner', object_table, actor_table)
 
 world_data_table = QueryableTable('world_data', 'world_data_id', 'data_name')
-involved_history_world_data_table = ConnectiveTable('involved_history_world_data', historical_fragments_table, world_data_table)
+involved_history_world_data_table = ConnectiveTable('involved_history_world_data', historical_fragment_table, world_data_table)
 
 # Here we connect up the tables
 
@@ -442,14 +442,14 @@ actor_table.connect_to_connective_tables([faction_members_table, residents_table
 
 
 
-faction_table.connect_to_connective_tables([faction_members_table, location_to_faction_table, historical_fragments_table])
+faction_table.connect_to_connective_tables([faction_members_table, location_to_faction_table, historical_fragment_table])
 faction_table.connect_to_self_connective_tables([faction_a_on_b_relations_table])
 
 location_table.connect_to_endcaps([location_city_table])
 location_table.connect_to_connective_tables([location_to_faction_table, residents_table, involved_history_location_table])
 
-historical_fragments_table.connect_to_endcaps([])
-historical_fragments_table.connect_to_connective_tables([involved_history_actor_table, involved_history_faction_table, involved_history_location_table, involved_history_object_table, involved_history_world_data_table])
+historical_fragment_table.connect_to_endcaps([])
+historical_fragment_table.connect_to_connective_tables([involved_history_actor_table, involved_history_faction_table, involved_history_location_table, involved_history_object_table, involved_history_world_data_table])
 
 object_table.connect_to_endcaps([])
 object_table.connect_to_connective_tables([involved_history_object_table, object_to_owner_table])

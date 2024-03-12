@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS class, background, race, sub_race, actor, skills, actor_to_skills, faction, faction_a_on_b_relations, faction_members, location_, location_to_faction, location_dungeon, location_city, location_city_districts, residents, location_flora_fauna, historical_fragments, involved_history_actor, involved_history_location, involved_history_faction, object_, involved_history_object, object_to_owner, world_data, involved_history_world_data CASCADE;
+DROP TABLE IF EXISTS class, background, race, sub_race, actor, skills, actor_to_skills, faction, faction_a_on_b_relations, faction_members, location_, location_to_faction, location_dungeon, location_city, location_city_districts, residents, location_flora_fauna, historical_fragment, involved_history_actor, involved_history_location, involved_history_faction, object_, involved_history_object, object_to_owner, world_data, involved_history_world_data CASCADE;
 
 
 CREATE TABLE class(
@@ -185,7 +185,7 @@ CREATE TABLE location_flora_fauna(
     FOREIGN KEY (location_id) REFERENCES location_(id)
 );
 
-CREATE TABLE historical_fragments(
+CREATE TABLE historical_fragment(
     id SERIAL PRIMARY KEY,
     event_name VARCHAR(255),
     event_year INT,
@@ -197,7 +197,7 @@ CREATE TABLE involved_history_actor(
     historical_fragment_id INT,
     actor_id INT,
 
-    FOREIGN KEY (historical_fragment_id) REFERENCES historical_fragments(id),
+    FOREIGN KEY (historical_fragment_id) REFERENCES historical_fragment(id),
     FOREIGN KEY (actor_id) REFERENCES actor(id)
 );
 
@@ -206,7 +206,7 @@ CREATE TABLE involved_history_location(
     historical_fragment_id INT,
     location_id INT,
 
-    FOREIGN KEY (historical_fragment_id) REFERENCES historical_fragments(id),
+    FOREIGN KEY (historical_fragment_id) REFERENCES historical_fragment(id),
     FOREIGN KEY (location_id) REFERENCES location_(id)
 );
 
@@ -215,7 +215,7 @@ CREATE TABLE involved_history_faction(
     historical_fragment_id INT,
     faction_id INT,
     
-    FOREIGN KEY (historical_fragment_id) REFERENCES historical_fragments(id),
+    FOREIGN KEY (historical_fragment_id) REFERENCES historical_fragment(id),
     FOREIGN KEY (faction_id) REFERENCES faction(id)
 );
 
@@ -232,7 +232,7 @@ CREATE TABLE involved_history_object(
     historical_fragment_id INT,
     object_id INT,
 
-    FOREIGN KEY (historical_fragment_id) REFERENCES historical_fragments(id),
+    FOREIGN KEY (historical_fragment_id) REFERENCES historical_fragment(id),
     FOREIGN KEY (object_id) REFERENCES object_(id)
 );
 
@@ -256,6 +256,6 @@ CREATE TABLE involved_history_world_data(
     historical_fragment_id INT,
     world_data_id INT,
 
-    FOREIGN KEY (historical_fragment_id) REFERENCES historical_fragments(id),
+    FOREIGN KEY (historical_fragment_id) REFERENCES historical_fragment(id),
     FOREIGN KEY (world_data_id) REFERENCES world_data(id)
 );
