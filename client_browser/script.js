@@ -355,7 +355,7 @@ async function popupBuilderArbiter(tableSelected) {
         <div class="popup" id="popup-window">
             <div class="popup" id="popup-content">
                 <h2>CONNECT TO</h2>
-                <div class="popup right" id='popup-right'>
+                <form action='${tableSelected.replace('_table', '')}' class="popup right" id='popup-right'>
     `
     try {
         let listKeys = []
@@ -375,7 +375,7 @@ async function popupBuilderArbiter(tableSelected) {
     }
 
 
-    htmlString += `<button id='popup-submit'>Submit</button></div></div></div></div>`
+    htmlString += `<input type='submit' id='popup-submit' value='Submit'></form></div></div></div>`
     popUpWindow.innerHTML = htmlString
     let submitButtonPopup = document.getElementById('popup-submit')
     submitButtonPopup.onclick = ev => {
