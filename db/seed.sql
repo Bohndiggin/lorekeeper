@@ -151,9 +151,9 @@ CREATE TABLE location_dungeon(
 
 CREATE TABLE location_city(
     id SERIAL PRIMARY KEY,
-    location_id INT, 
+    location_id INT,
     government TEXT,
-    
+
     FOREIGN KEY (location_id) REFERENCES location_(id)
 );
 

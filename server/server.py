@@ -120,6 +120,11 @@ async def location_get_one(id:int = 0):
 async def loctaion_delete_one(id:int):
     return utils.location_table.delete_row_w_dependancies(id)
 
+@app.get('/residents-post', tags=['Location'])
+async def resident_post_one(location_id):
+    print(location_id)
+    return location_id
+
 @app.get('/historical-fragments', tags=['Historical Fragments'])
 async def historical_fragment_get():
     return utils.historical_fragment_table.query_get_10()

@@ -126,8 +126,8 @@ class Pg_Table:
             data[key] = sql.Literal(value)
         current_query = current_query.format(**data)
         print(current_query)
-        # data_returned += make_curs_query_commit(current_query)
-        return #data_returned
+        data_returned += make_curs_query_commit(current_query)
+        return data_returned
 
     def get_columns(self) -> list:
         """Function to get a list of columns so you can make sure user is supplying all the needed data"""
@@ -456,5 +456,3 @@ object_table.connect_to_connective_tables([involved_history_object_table, object
 
 world_data_table.connect_to_endcaps([])
 world_data_table.connect_to_connective_tables([involved_history_world_data_table])
-
-print(actor_table.get_columns())

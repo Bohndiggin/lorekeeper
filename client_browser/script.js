@@ -1,6 +1,3 @@
-// import Papa from 'papaparse';
-
-
 let actorButton = document.getElementById('dmdms-actor-btn')
 let factionButton = document.getElementById('dmdms-faction-btn')
 let locationButton = document.getElementById('dmdms-location-btn')
@@ -20,50 +17,37 @@ let currentOpen = {
     'connective_table': ''
 }
 
-//THIS IS BAD
-
-const orderData = Papa.parse(`
-actor_table,first_name,middle_name,last_name,title,actor_age,actor_level,job,actor_role,alignment,strength,dexterity,constitution,intelligence,wisdom,charisma,ideal,bond,flaw,appearance,strengths,weaknesses
-class_table,class_name,class_description,,,,,,,,,,,,,,,,,,,,,,,
-race_table,race_name,race_description,,,,,,,,,,,,,,,,,,,,,,,
-sub_races_table,parent_race_id,sub_race_name,sub_race_description,,,,,,,,,,,,,,,,,,,,,,
-background_table,background_name,background_description,,,,,,,,,,,,,,,,,,,,,,,
-faction_table,faction_name,faction_description,goals,faction_values,faction_income_sources,faction_expenses,,,,,,,,,,,,,,,,,,,
-faction_relations_table,faction_a_id,faction_b_id,overall,economically,politically,opinion,,,,,,,,,,,,,,,,,,,
-faction_members_table,actor_id,faction_id,actor_role,relative_power,,,,,,,,,,,,,,,,,,,,,
-location_table,location_name,location_type,location_description,sights,smells,sounds,feels,tastes,coordinates,,,,,,,,,,,,,,,,
-location_to_faction_table,location_id,faction_id,faction_presence,faction_power,notes,,,,,,,,,,,,,,,,,,,,
-location_dungeon_table,location_id,dangers,traps,secrets,,,,,,,,,,,,,,,,,,,,,
-location_city_table,location_id,government,,,,,,,,,,,,,,,,,,,,,,,
-location_districts_table,city_id,district_id,,,,,,,,,,,,,,,,,,,,,,,
-residents_table,actor_id,city_id,,,,,,,,,,,,,,,,,,,,,,,
-location_flora_fauna_table,location_id,living_name,living_description,living_type,,,,,,,,,,,,,,,,,,,,,
-historical_fragment_table,event_name,event_year,event_description,,,,,,,,,,,,,,,,,,,,,,
-involved_history_actor_table,historical_fragment_id,actor_id,,,,,,,,,,,,,,,,,,,,,,,
-involved_history_location_table,historical_fragment_id,location_id,,,,,,,,,,,,,,,,,,,,,,,
-object_table,object_name,object_description,object_value,rarity,,,,,,,,,,,,,,,,,,,,,
-involved_history_object_table,historical_fragment_id,object_id,,,,,,,,,,,,,,,,,,,,,,,
-world_data_table,data_name,data_description,,,,,,,,,,,,,,,,,,,,,,,
-involved_history_world_data_table,historical_fragment_id,world_data_id,,,,,,,,,,,,,,,,,,,,,,,
-object_to_owner_table,object_id,actor_id,,,,,,,,,,,,,,,,,,,,,,,
-`)
-
-//BAD OVER
-
 let orderDataDict = {}
 
-for(let i = 1;i<orderData.data.length;i++) {
-    // console.log(orderData.data[i])
-    orderDataDict[orderData.data[i][0]] = []
-    // console.log(orderDataDict)
-    for(let j = 1;j<orderData.data[i].length;j++) {
-        if (orderData.data[i][j] == '') {
-            continue
+function saveOrderData(data) {
+    // console.log(data)
+    let orderData = Papa.parse(data)
+    let orderDataDictWork = {}
+    for(let i = 1;i<orderData.data.length;i++) {
+        // console.log(orderData.data[i])
+        orderDataDictWork[orderData.data[i][0]] = []
+        // console.log(orderDataDict)
+        for(let j = 1;j<orderData.data[i].length;j++) {
+            if (orderData.data[i][j] == '') {
+                continue
+            }
+            // console.log(orderData.data[i][j])
+            orderDataDictWork[orderData.data[i][0]].push(orderData.data[i][j])
         }
-        // console.log(orderData.data[i][j])
-        orderDataDict[orderData.data[i][0]].push(orderData.data[i][j])
     }
+    orderDataDict = orderDataDictWork
+    console.log('orderDataDict Loaded')
+    console.log(orderDataDict)
 }
+
+async function loadOrderData() {
+    fetch('http://localhost:8000/main/properorders.csv')
+        .then(response => response.text())
+        .then((data) => saveOrderData(data))
+        .catch(error => console.log(error))
+}
+
+
 
 let relationMap = {
     '/actor': {
@@ -355,7 +339,7 @@ async function popupBuilderArbiter(tableSelected) {
         <div class="popup" id="popup-window">
             <div class="popup" id="popup-content">
                 <h2>CONNECT TO</h2>
-                <form action='${tableSelected.replace('_table', '')}' class="popup right" id='popup-right'>
+                <form action='${tableSelected.replace('_table', '')}' class="popup right" id='popup-right' method="POST">
     `
     try {
         let listKeys = []
@@ -395,11 +379,12 @@ function addButtonTopFunction() {
 }
 
 function sortIt(orderedExampleList, toSortList) {
+
     result = {}
     for (let i =0;i<orderedExampleList.length;i++) {
         result[orderedExampleList[i]] = toSortList[toSortList.indexOf(orderedExampleList[i])]
     }
     return result
 }
-
+loadOrderData()
 loadTables()
