@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from server_meta import *
 
 load_dotenv()
-db_url = os.getenv('CONNSTR')
+db_url = os.getenv('DATABASE_URL')
 generic_select_query = sql.SQL('SELECT * FROM {} LIMIT 10;')
 
 all_tables: dict['Pg_Table'] = {}

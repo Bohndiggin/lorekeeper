@@ -4,7 +4,7 @@ import os, csv
 from dotenv import load_dotenv
 
 load_dotenv()
-db_url = os.getenv('CONNSTR')
+db_url = os.getenv('DATABASE_URL')
 
 def main():
     conn = pg.connect(db_url)
