@@ -102,7 +102,6 @@ function writeTable(response, endpoint){
         tableHTML += `<th>${keys[j]}</th>`
     }
     tableHTML += `</tr>`
-    // displayArea.innerHTML += tableHTML
     for (let i = 0;i<response.data.length;i++) {
         let values = Object.values(response.data[i])
         tableHTML += `<tr>`
@@ -113,16 +112,12 @@ function writeTable(response, endpoint){
             tableHTML += `<td>${values[j]}</td>`
         }
         tableHTML += `</tr>`
-        // displayArea.html += tableHTML
-        // console.log(`${values[0]}-${values[1]}`)
-        // document.getElementById(`${values[0]}-${values[1]}`).onclick = () => console.log(`${endpoint}/?id=${values[0]}`)
     }
     tableHTML += `</table>`
     displayArea.innerHTML = tableHTML
     displayArea.innerHTML += '</div>'
     for (let i = 0;i<response.data.length;i++){
         let values = Object.values(response.data[i])
-        // console.log(`${values[0]}-${values[1]}`)
         let idClean = values[1].split(' ').join('')
         let buttonTemp = document.getElementById(`${values[0]}-${idClean}`)
         let idNum = values[0]
@@ -136,7 +131,6 @@ function writeOne(data, idNum) {
     let singleDisplay = document.getElementById('single-display')
     singleDisplay.innerHTML = '';
     let { overview, traits, related } = data
-    // console.log(overview)
     singleDisplay.innerHTML += '<h2>Overview</h2><ul>'
     for (const property in overview) {
         singleDisplay.innerHTML += `<li><b>${formatNormal(property)}:</b> ${overview[property]}</li>`
@@ -155,7 +149,6 @@ function writeOne(data, idNum) {
         singleDisplay.innerHTML += `</ul>`
     }
     singleDisplay.innerHTML += '<h2>Related</h2><ul>'
-    // console.log(related)
     for (const property in related) {
         singleDisplay.innerHTML += `<h3>${formatNormal(property)}</h3><ul>`
         let currentProperty = related[property] //this is where we'll ask for an event name to make the card
@@ -173,14 +166,12 @@ function writeOne(data, idNum) {
     for (const property in related) {
         let addRelatedPropertyTemp = document.getElementById(`add-${property}`)
         addRelatedPropertyTemp.onclick = ev => {
-            // console.log(property)
             currentOpen['connective_table'] = property
             let tableNameTarget = property + "_table"
             tableNameTarget = tableNameTarget.replace('__', '_')
             popupBuilderArbiter(tableNameTarget)
         }
     }
-    // console.log(relatedValues)
 }
 function sendOneSignal(endpoint, idNum) {
     const dmdmsconn = "http://127.0.0.1:8000";
@@ -303,10 +294,15 @@ async function getConnectiveData(key) {
 
 function inputBoxBuilder(dataNameStr) {
     let htmlString = `<label for="${dataNameStr}">${formatNormal(dataNameStr)}</label>`
-    htmlString += `<input type="text" id="${dataNameStr}-input" placeholder='${dataNameStr}'/>`
+    htmlString += `<input type="text" id="${dataNameStr}-input" placeholder='${dataNameStr}' value='${dataNameStr}'/>`
     return htmlString
 }
 
+function inputBoxBuilderNum(dataNameStr) {
+    let htmlString = `<label for="${dataNameStr}">${formatNormal(dataNameStr)}</label>`
+    htmlString += `<input type="number" id="${dataNameStr}-input" placeholder='${dataNameStr}' value='0'/>`
+    return htmlString
+}
 async function queryConnectiveAndEndcap(value) {}
 
 
@@ -332,6 +328,7 @@ async function extraDataQuerier(currentRequested) {
 async function popupBuilderArbiter(tableSelected) {
     let popUpWindow = document.getElementById('popup')
     let currentRequested = tableData[tableSelected]
+    console.log(tableSelected)
     htmlString = `
     <div class="popup", id='popupbkg'>
     </div>
@@ -339,16 +336,20 @@ async function popupBuilderArbiter(tableSelected) {
         <div class="popup" id="popup-window">
             <div class="popup" id="popup-content">
                 <h2>CONNECT TO</h2>
-                <form action='${tableSelected.replace('_table', '')}' class="popup right" id='popup-right' method="POST">
+                <form class="popup right" id='popup-right' method="POST">
     `
     try {
         let listKeys = []
-        for (const [key, value] of Object.entries(currentRequested['non_foreign'])) {
+        for (const [key, value] of Object.entries(currentRequested['non_foreign'])) { //refactor to make it build number input boxes
             listKeys.push(key)
         }
         listKeys = sortIt(orderDataDict[tableSelected], listKeys)
         for (const key in listKeys) {
             if (key.includes('_id')){
+                continue
+            }
+            if (currentRequested['non_foreign'][key] == 'integer'){
+                htmlString += inputBoxBuilderNum(key)
                 continue
             }
             htmlString += inputBoxBuilder(key)
@@ -361,14 +362,46 @@ async function popupBuilderArbiter(tableSelected) {
 
     htmlString += `<input type='submit' id='popup-submit' value='Submit'></form></div></div></div>`
     popUpWindow.innerHTML = htmlString
-    let submitButtonPopup = document.getElementById('popup-submit')
-    submitButtonPopup.onclick = ev => {
-        getForm()
-    }
+    // let submitButtonPopup = document.getElementById('popup-submit')
+    // submitButtonPopup.onclick = ev => {
+    //     getForm()
+    // }
     let popupBackground = document.getElementById('popupbkg')
     popupBackground.onclick = ev => {
         closeAddingWindow()
     }
+    let form = document.getElementById('popup-right')
+    let formData = {}
+    form.addEventListener('submit', event => {
+        event.preventDefault()
+        //loop through and get values of all strings
+        for (const [key, value] of Object.entries(currentRequested['non_foreign'])) {
+            if (key.includes('_id')){
+                continue
+            }
+            console.log(key)
+            formData[key] = document.getElementById(key + '-input').value
+        }
+        for (const [key, value] of Object.entries(currentRequested['foreign_keyed'])) {
+            if (key == 'id') {
+                continue
+            }
+            console.log(key)
+            formData[key] = parseInt(document.getElementById('selection-' + key).value)
+        }
+        const loreconn = "http://127.0.0.1:8000/";
+        console.log(formData)
+        let targetEndpoint = tableSelected.replace('_table', '')
+        axios.post(loreconn + targetEndpoint, data=formData)
+            .then(response => {
+                console.log(response)
+            })
+            .catch(error => {
+                console.log(error)
+            });
+        sendSignal('/' + targetEndpoint)
+        closeAddingWindow()
+    })
     return htmlString
 }
 
