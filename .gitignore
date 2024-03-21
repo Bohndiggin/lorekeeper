@@ -8,3 +8,4 @@ db/D_D.opml
 node_modules/
 client_fvtt/dmdms/.env
 .vscode
+client_browser/.env

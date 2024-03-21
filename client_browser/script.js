@@ -41,7 +41,7 @@ function saveOrderData(data) {
 }
 
 async function loadOrderData() {
-    fetch('http://localhost:8000/main/properorders.csv')
+    fetch('/main/properorders.csv')
         .then(response => response.text())
         .then((data) => saveOrderData(data))
         .catch(error => console.log(error))
@@ -174,7 +174,7 @@ function writeOne(data, idNum) {
     }
 }
 function sendOneSignal(endpoint, idNum) {
-    const dmdmsconn = "http://127.0.0.1:8000";
+    const dmdmsconn = "";
     axios.get(dmdmsconn + endpoint)
         .then((response) => writeOne(response.data, idNum))
         .catch((error) => console.log(error))
@@ -182,7 +182,7 @@ function sendOneSignal(endpoint, idNum) {
 function sendSignal(endpoint) {
     let singleDisplay = document.getElementById('single-display')
     singleDisplay.innerHTML = '';
-    const dmdmsconn = "http://127.0.0.1:8000";
+    const dmdmsconn = "";
     axios.get(dmdmsconn + endpoint)
         .then((response) => writeTable(response, endpoint))
         .catch((error) => console.log(error))
@@ -229,7 +229,7 @@ function closeAddingWindow() {
 }
 
 function postToConnectiveTable(selectedID) { // TODO Add function to server.py that returns a list of traits that are tracked in pgsql so we can gather them.
-    const loreconn = "http://127.0.0.1:8000";
+    const loreconn = "";
     let postData = {
         'currentOpen': currentOpen,
         'selectedId': selectedID
@@ -259,7 +259,7 @@ function storeTables(dict) {
 }
 
 function loadTables() {
-    const loreconn = "http://127.0.0.1:8000";
+    const loreconn = "";
     console.log('Loading Table Data') //TODO Insert Loading bar
     axios.get(loreconn + '/load-tables')
         .then((response) => {
@@ -270,7 +270,7 @@ function loadTables() {
 }
 
 async function getEndcapData(key) {
-    const loreconn = "http://127.0.0.1:8000";
+    const loreconn = "";
     let targetTable = key.slice(0, key.length -3) + '_table'
     // console.log(typeof(targetTable))
     let GetEndcapDataRequest = {
@@ -285,7 +285,7 @@ async function getEndcapData(key) {
 }
 
 async function getConnectiveData(key) {
-    const loreconn = "http://127.0.0.1:8000";
+    const loreconn = "";
     let endpoint = relationMap[currentOpen['table']][currentOpen['connective_table']];
     return await axios.get(loreconn + endpoint)
         .then(data => {return data})
@@ -389,7 +389,7 @@ async function popupBuilderArbiter(tableSelected) {
             console.log(key)
             formData[key] = parseInt(document.getElementById('selection-' + key).value)
         }
-        const loreconn = "http://127.0.0.1:8000/";
+        const loreconn = "/";
         console.log(formData)
         let targetEndpoint = tableSelected.replace('_table', '')
         axios.post(loreconn + targetEndpoint, data=formData)
