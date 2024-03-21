@@ -37,7 +37,7 @@ app = FastAPI(
     openapi_tags=tags_metadata
 )
 
-app.mount('/main', StaticFiles(directory='../client_browser', html=True), name='dmdms')
+app.mount('/main', StaticFiles(directory='./client_browser', html=True), name='dmdms')
 
 origins = [
     '*'
