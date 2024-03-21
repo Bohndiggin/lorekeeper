@@ -4,7 +4,7 @@ import psycopg2.extras
 import os, csv
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from server_meta import *
+from server.server_meta import *
 
 load_dotenv()
 db_url = os.getenv('DATABASE_URL')

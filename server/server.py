@@ -3,7 +3,7 @@ import psycopg2 as pg
 import psycopg2.extras
 import os, json
 from datetime import datetime
-import utils
+import server.utils as utils
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
