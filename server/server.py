@@ -198,3 +198,15 @@ async def load_table_data():
 @app.post('/faction_members')
 async def post_faction_member(body:PostFactionMember):
     return utils.faction_members_table.post_data(body)
+
+@app.post('/residents')
+async def post_resident(body:PostResident):
+    return utils.residents_table.post_data(body)
+
+@app.post('/involved_history_actor')
+async def post_involved_history_actor(body:PostInvolvedHistoryActor):
+    return utils.involved_history_actor_table.post_data(body)
+
+@app.post('/location_to_faction')
+async def post_location_to_faction(body:PostLocationToFaction):
+    return utils.location_to_faction_table.post_data(body)

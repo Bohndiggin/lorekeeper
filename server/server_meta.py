@@ -181,3 +181,18 @@ class PostFactionMember(BaseModel):
     actor_role: str
     faction_id: int
     relative_power: int
+
+class PostResident(BaseModel):
+    actor_id: int
+    location_id: int
+
+class PostInvolvedHistoryActor(BaseModel):
+    actor_id: int
+    historical_fragment_id: int
+
+class PostLocationToFaction(BaseModel):
+    faction_id: int
+    faction_power: str
+    faction_presence: str
+    location_id: int
+    notes: str
