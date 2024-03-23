@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from server.server_meta import *
 
 load_dotenv()
+
 db_url = os.getenv('DATABASE_URL')
 generic_select_query = sql.SQL('SELECT * FROM {} LIMIT 10;')
 

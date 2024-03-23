@@ -379,14 +379,18 @@ async function popupBuilderArbiter(tableSelected) {
             if (key.includes('_id')){
                 continue
             }
-            console.log(key)
             formData[key] = document.getElementById(key + '-input').value
         }
         for (const [key, value] of Object.entries(currentRequested['foreign_keyed'])) {
             if (key == 'id') {
                 continue
             }
-            console.log(key)
+            if (key == currentOpen['table'].replace('/', '').replace('_table', '') + '_id') {
+                console.log('key found')
+                formData[key] = currentOpen['item']
+                continue
+            }
+            // console.log(key)
             formData[key] = parseInt(document.getElementById('selection-' + key).value)
         }
         const loreconn = "/";
@@ -399,7 +403,7 @@ async function popupBuilderArbiter(tableSelected) {
             .catch(error => {
                 console.log(error)
             });
-        sendSignal('/' + targetEndpoint)
+        sendSignal(currentOpen['table'])
         closeAddingWindow()
     })
     return htmlString
@@ -421,3 +425,5 @@ function sortIt(orderedExampleList, toSortList) {
 }
 loadOrderData()
 loadTables()
+
+sendSignal('/actor')

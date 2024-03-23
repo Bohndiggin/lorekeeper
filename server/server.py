@@ -192,3 +192,9 @@ async def load_table_data():
         column_data = i.get_columns()
         response[i.table_name_no_dunder] = column_data
     return response
+
+# BEGIN CONNECTIVE TABLES
+
+@app.post('/faction_members')
+async def post_faction_member(body:PostFactionMember):
+    return utils.faction_members_table.post_data(body)

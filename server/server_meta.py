@@ -175,3 +175,9 @@ class PostDataRequest(BaseModel):
 
 class GetEndcapDataRequest(BaseModel):
     targetEndcap: str
+
+class PostFactionMember(BaseModel):
+    actor_id: int
+    actor_role: str
+    faction_id: int
+    relative_power: int
