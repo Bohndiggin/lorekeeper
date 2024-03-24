@@ -86,7 +86,7 @@ async def faction_get():
 
 @app.post('/faction', tags=['Faction'])
 async def faction_post(body:FactionPostRequest):
-    return utils.actor_table.post_data(body)
+    return utils.faction_table.post_data(body)
 
 @app.get('/faction-names', tags=['Faction'])
 async def faction_get_names():
