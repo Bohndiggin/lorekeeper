@@ -214,3 +214,19 @@ async def post_location_to_faction(body:PostLocationToFaction):
 @app.post('/history_location')
 async def post_history_location(body:PostInvolvedHistoryLocation):
     return utils.history_location_table.post_data(body)
+
+@app.post('/history_faction')
+async def post_history_faction(body:PostHistoryFaction):
+    return utils.history_faction_table.post_data(body)
+
+@app.post('/history_object')
+async def post_history_object(body:PostHistoryObject):
+    return utils.history_object_table.post_data(body)
+
+@app.post('/history_world_data')
+async def post_history_world_data(body:PostHistoryWorldData):
+    return utils.history_world_data_table.post_data(body)
+
+@app.post('/object_to_owner')
+async def post_object_to_owner(body:PostObjectToOwner):
+    return utils.object_to_owner_table.post_data(body)

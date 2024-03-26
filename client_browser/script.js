@@ -326,8 +326,10 @@ async function extraDataQuerier(currentRequested) {
 
 
 async function popupBuilderArbiter(tableSelected) {
+    tableSelected = tableSelected.replace('-', '_')
     let popUpWindow = document.getElementById('popup')
     let currentRequested = tableData[tableSelected]
+    console.log(tableSelected)
     console.log(currentRequested)
     htmlString = `
     <div class="popup", id='popupbkg'>
@@ -355,6 +357,10 @@ async function popupBuilderArbiter(tableSelected) {
             }
             htmlString += inputBoxBuilder(key)
         }
+    } catch (error) {
+        console.log(error)
+    }
+    try {
         htmlString += await extraDataQuerier(currentRequested)
     } catch (error) {
         console.log(error)

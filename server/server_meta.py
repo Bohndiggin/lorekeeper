@@ -200,3 +200,19 @@ class PostLocationToFaction(BaseModel):
 class PostInvolvedHistoryLocation(BaseModel):
     history_id: int
     location_id: int
+
+class PostHistoryFaction(BaseModel):
+    history_id: int
+    faction_id: int
+
+class PostHistoryObject(BaseModel):
+    history_id: int
+    object_id: int
+
+class PostHistoryWorldData(BaseModel):
+    history_id: int
+    world_data_id: int
+
+class PostObjectToOwner(BaseModel):
+    object_id: int
+    actor_id: int
