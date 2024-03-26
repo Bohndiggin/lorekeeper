@@ -53,7 +53,7 @@ let relationMap = {
     '/actor': {
         'faction_members': '/faction-names',
         'residents': '/location-names',
-        'involved_history_actor': '/history-names'
+        'history_actor': '/history-names'
     },
     '/faction': {
         'faction_members': '/actor-names',
@@ -62,21 +62,21 @@ let relationMap = {
     '/location': {
         'location_to_faction': '/faction-names',
         'residents': '/actor-names',
-        'involved_history_location': '/history-names'
+        'history_location': '/history-names'
     },
     '/history': {
-        'involved_history_actor': '/actor-names',
-        'involved_history_faction': '/faction-names',
-        'involved_history_location': '/location-names',
-        'involved_history_object': '/object-names',
-        'involved_history_world_data': '/world-data-names'
+        'history_actor': '/actor-names',
+        'history_faction': '/faction-names',
+        'history_location': '/location-names',
+        'history_object': '/object-names',
+        'history_world_data': '/world-data-names'
     },
     '/object': {
-        'involved_history_object': '/history-names',
+        'history_object': '/history-names',
         'object_to_owner': '/actor-names'
     },
     '/world-data': {
-        'involved_history_world_data': '/history-names'
+        'history_world_data': '/history-names'
     }
 }
 
@@ -184,9 +184,7 @@ function sendSignal(endpoint) {
     singleDisplay.innerHTML = '';
     const dmdmsconn = "";
     axios.get(dmdmsconn + endpoint)
-        .then((response) => {
-            console.log(response)
-            writeTable(response, endpoint)})
+        .then((response) => writeTable(response, endpoint))
         .catch((error) => console.log(error))
 }
 
@@ -330,7 +328,7 @@ async function extraDataQuerier(currentRequested) {
 async function popupBuilderArbiter(tableSelected) {
     let popUpWindow = document.getElementById('popup')
     let currentRequested = tableData[tableSelected]
-    console.log(tableSelected)
+    console.log(currentRequested)
     htmlString = `
     <div class="popup", id='popupbkg'>
     </div>
@@ -343,6 +341,7 @@ async function popupBuilderArbiter(tableSelected) {
     try {
         let listKeys = []
         for (const [key, value] of Object.entries(currentRequested['non_foreign'])) { //refactor to make it build number input boxes
+            console.log(key)
             listKeys.push(key)
         }
         listKeys = sortIt(orderDataDict[tableSelected], listKeys)

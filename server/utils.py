@@ -120,13 +120,11 @@ class Pg_Table:
     def post_data(self, data) -> list:
         """This Function uses the build_insert_query sql.SQL and a dict with keywords to add a row to the database"""
         data_returned = []
-        print(data)
         data = dict(data)
         current_query = self.post_query
         for key, value in data.items():
             data[key] = sql.Literal(value)
         current_query = current_query.format(**data)
-        print(current_query)
         data_returned += make_curs_query_commit(current_query)
         return data_returned
 
@@ -171,8 +169,6 @@ class Pg_Table:
                 if row['table_name'] == self.table_name and str(row['column_name']) not in columns_and_types['foreign_keyed'].keys():
                     columns_and_types['non_foreign'][row['column_name']] = [row['data_type']]
             conn.commit()
-
-        # print(columns_and_types)
         return columns_and_types
 
 class InteractiveTable(Pg_Table):
