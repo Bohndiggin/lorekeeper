@@ -1,13 +1,13 @@
-let actorButton = document.getElementById('dmdms-actor-btn')
-let factionButton = document.getElementById('dmdms-faction-btn')
-let locationButton = document.getElementById('dmdms-location-btn')
-let historicalFragmentsButton = document.getElementById('dmdms-historical-fragments-btn')
-let objectButton = document.getElementById('dmdms-object-btn')
-let worldDataButton = document.getElementById('dmdms-world-data-btn')
+let actorButton = document.getElementById('actor-btn')
+let factionButton = document.getElementById('faction-btn')
+let locationButton = document.getElementById('location-btn')
+let historyButton = document.getElementById('history-btn')
+let objectButton = document.getElementById('object-btn')
+let worldDataButton = document.getElementById('world-data-btn')
 actorButton.onclick = ev => {sendSignal('/actor')};
 factionButton.onclick = ev => {sendSignal('/faction')};
 locationButton.onclick = ev => {sendSignal('/location')};
-historicalFragmentsButton.onclick = ev => {sendSignal('/historical-fragments')};
+historyButton.onclick = ev => {sendSignal('/history')};
 objectButton.onclick = ev => {sendSignal('/object')};
 worldDataButton.onclick = ev => {sendSignal('/world-data')};
 
@@ -53,7 +53,7 @@ let relationMap = {
     '/actor': {
         'faction_members': '/faction-names',
         'residents': '/location-names',
-        'involved_history_actor': '/historical-fragments-names'
+        'involved_history_actor': '/history-names'
     },
     '/faction': {
         'faction_members': '/actor-names',
@@ -62,9 +62,9 @@ let relationMap = {
     '/location': {
         'location_to_faction': '/faction-names',
         'residents': '/actor-names',
-        'involved_history_location': '/historical-fragments-names'
+        'involved_history_location': '/history-names'
     },
-    '/historical-fragments': {
+    '/history': {
         'involved_history_actor': '/actor-names',
         'involved_history_faction': '/faction-names',
         'involved_history_location': '/location-names',
@@ -72,11 +72,11 @@ let relationMap = {
         'involved_history_world_data': '/world-data-names'
     },
     '/object': {
-        'involved_history_object': '/historical-fragments-names',
+        'involved_history_object': '/history-names',
         'object_to_owner': '/actor-names'
     },
     '/world-data': {
-        'involved_history_world_data': '/historical-fragments-names'
+        'involved_history_world_data': '/history-names'
     }
 }
 
@@ -106,7 +106,7 @@ function writeTable(response, endpoint){
         let values = Object.values(response.data[i])
         tableHTML += `<tr>`
         let idClean = values[1]
-        idClean = idClean.split(' ').join('')
+        idClean = idClean.split(' ').join('').replace('"', '').replace(`'`, '')
         tableHTML += `<td><button id='${values[0]}-${idClean}'>${values[0]}</button></td>`
         for (let j = 1;j<values.length;j++){
             tableHTML += `<td>${values[j]}</td>`
@@ -118,7 +118,7 @@ function writeTable(response, endpoint){
     displayArea.innerHTML += '</div>'
     for (let i = 0;i<response.data.length;i++){
         let values = Object.values(response.data[i])
-        let idClean = values[1].split(' ').join('')
+        let idClean = values[1].split(' ').join('').replace('"', '').replace(`'`, '')
         let buttonTemp = document.getElementById(`${values[0]}-${idClean}`)
         let idNum = values[0]
         buttonTemp.onclick = ev => {
@@ -184,7 +184,9 @@ function sendSignal(endpoint) {
     singleDisplay.innerHTML = '';
     const dmdmsconn = "";
     axios.get(dmdmsconn + endpoint)
-        .then((response) => writeTable(response, endpoint))
+        .then((response) => {
+            console.log(response)
+            writeTable(response, endpoint)})
         .catch((error) => console.log(error))
 }
 

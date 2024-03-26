@@ -3,7 +3,7 @@ import psycopg2 as pg
 from dotenv import load_dotenv
 
 load_dotenv()
-db_url = os.getenv('CONNSTR')
+db_url = os.getenv('DATABASE_URL')
 
 def open_csv_and_query(query:str, file_location:str, cursor:pg.extensions.cursor):
     with open(file_location) as f:
@@ -54,12 +54,12 @@ location_dungeon_table = Pg_Table('location_dungeon')
 location_city_table = Pg_Table('location_city')
 location_city_districts_table = Pg_Table('location_city_districts')
 residents_table = Pg_Table('residents')
-historical_fragment_table = Pg_Table('historical_fragment')
-involved_history_actor_table = Pg_Table('involved_history_actor')
-involved_history_location_table = Pg_Table('involved_history_location')
+history_table = Pg_Table('history')
+history_actor_table = Pg_Table('history_actor')
+history_location_table = Pg_Table('history_location')
 object_table = Pg_Table('object_')
-involved_history_object_table = Pg_Table('involved_history_object')
+history_object_table = Pg_Table('history_object')
 world_data_table = Pg_Table('world_data')
-involved_history_world_data_table = Pg_Table('involved_history_world_data')
+history_world_data_table = Pg_Table('history_world_data')
 
 

@@ -32,7 +32,7 @@ app = FastAPI(
     lifespan=lifespan,
     title="LoreKeeper",
     description=description,
-    summary="The Keeper or Lore",
+    summary="The Keeper of Lore",
     version='0.1.2',
     openapi_tags=tags_metadata
 )
@@ -125,21 +125,21 @@ async def resident_post_one(location_id):
     print(location_id)
     return location_id
 
-@app.get('/historical-fragments', tags=['Historical Fragments'])
-async def historical_fragment_get():
-    return utils.historical_fragment_table.query_get_10()
+@app.get('/history', tags=['Historical Fragments'])
+async def history_get():
+    return utils.history_table.query_get_10()
 
-@app.post('/historical-fragments', tags=['Historical Fragments'])
+@app.post('/history', tags=['Historical Fragments'])
 async def historical_fregments_post(body:HistoricalFragmentsRequest):
-    return utils.historical_fragment_table.post_data(body)
+    return utils.history_table.post_data(body)
 
-@app.get('/historical-fragments-names', tags=['Historical Fragments'])
-async def historical_fragment_get_names():
-    return utils.historical_fragment_table.get_all_named()
+@app.get('/history-names', tags=['Historical Fragments'])
+async def history_get_names():
+    return utils.history_table.get_all_named()
 
-@app.get('/historical-fragments/', tags=['Historical Fragments'])
-async def historical_fragment_get_one(id:int = 0):
-    return utils.historical_fragment_table.query_one_by_id(id)
+@app.get('/history/', tags=['Historical Fragments'])
+async def history_get_one(id:int = 0):
+    return utils.history_table.query_one_by_id(id)
 
 @app.get('/object', tags=['Objects'])
 async def object_get():
@@ -203,10 +203,14 @@ async def post_faction_member(body:PostFactionMember):
 async def post_resident(body:PostResident):
     return utils.residents_table.post_data(body)
 
-@app.post('/involved_history_actor')
-async def post_involved_history_actor(body:PostInvolvedHistoryActor):
-    return utils.involved_history_actor_table.post_data(body)
+@app.post('/history_actor')
+async def post_history_actor(body:PostInvolvedHistoryActor):
+    return utils.history_actor_table.post_data(body)
 
 @app.post('/location_to_faction')
 async def post_location_to_faction(body:PostLocationToFaction):
     return utils.location_to_faction_table.post_data(body)
+
+@app.post('/history_location')
+async def post_history_location(body:PostInvolvedHistoryLocation):
+    return utils.history_location_table.post_data(body)

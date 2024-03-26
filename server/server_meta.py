@@ -188,7 +188,7 @@ class PostResident(BaseModel):
 
 class PostInvolvedHistoryActor(BaseModel):
     actor_id: int
-    historical_fragment_id: int
+    history_id: int
 
 class PostLocationToFaction(BaseModel):
     faction_id: int
@@ -196,3 +196,7 @@ class PostLocationToFaction(BaseModel):
     faction_presence: str
     location_id: int
     notes: str
+
+class PostInvolvedHistoryLocation(BaseModel):
+    history_id: int
+    location_id: int

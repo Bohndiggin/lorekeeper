@@ -33,13 +33,13 @@ def main():
     utils.open_csv_and_query(utils.location_city_table.build_query(), 'db/test_data/location_city_test.csv', cur)
     utils.open_csv_and_query(utils.location_city_districts_table.build_query(), 'db/test_data/location_city_districts_test.csv', cur)
     utils.open_csv_and_query(utils.residents_table.build_query(), 'db/test_data/residents_test.csv', cur)
-    utils.open_csv_and_query(utils.historical_fragment_table.build_query(), 'db/test_data/historical_fragments_test.csv', cur)
-    utils.open_csv_and_query(utils.involved_history_actor_table.build_query(), 'db/test_data/involved_history_actor_test.csv', cur)
-    utils.open_csv_and_query(utils.involved_history_location_table.build_query(), 'db/test_data/involved_history_location_test.csv', cur)
+    utils.open_csv_and_query(utils.history_table.build_query(), 'db/test_data/historical_fragments_test.csv', cur)
+    utils.open_csv_and_query(utils.history_actor_table.build_query(), 'db/test_data/involved_history_actor_test.csv', cur)
+    utils.open_csv_and_query(utils.history_location_table.build_query(), 'db/test_data/involved_history_location_test.csv', cur)
     utils.open_csv_and_query(utils.object_table.build_query(), 'db/test_data/object_test.csv', cur)
-    utils.open_csv_and_query(utils.involved_history_object_table.build_query(), 'db/test_data/involved_history_object_test.csv', cur)
+    utils.open_csv_and_query(utils.history_object_table.build_query(), 'db/test_data/involved_history_object_test.csv', cur)
     utils.open_csv_and_query(utils.world_data_table.build_query(), 'db/test_data/world_data_test.csv', cur)
-    utils.open_csv_and_query(utils.involved_history_world_data_table.build_query(), 'db/test_data/involved_history_world_data_test.csv', cur)
+    utils.open_csv_and_query(utils.history_world_data_table.build_query(), 'db/test_data/involved_history_world_data_test.csv', cur)
 
 
 
