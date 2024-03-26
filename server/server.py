@@ -177,15 +177,11 @@ async def world_data_post(body:WorldDataRequest):
 async def world_data_get_names():
     return utils.world_data_table.get_all_named()
 
-@app.post('/test-data-post')
-async def post_data_test(body:PostDataRequest):
-    return utils.recieve_connective_post(body)
-
-@app.post('/query-endcaps')
+@app.post('/query-endcaps', tags=['Utility'])
 async def get_endcap_data(body:GetEndcapDataRequest):
     return utils.all_tables[body.targetEndcap].get_all_named()
 
-@app.get('/load-tables')
+@app.get('/load-tables', tags=['Utility'])
 async def load_table_data():
     response = {}
     for i in utils.all_tables.values():
@@ -193,40 +189,40 @@ async def load_table_data():
         response[i.table_name_no_dunder] = column_data
     return response
 
-# BEGIN CONNECTIVE TABLES
+# CONNECTIVE TABLES
 
-@app.post('/faction_members')
+@app.post('/faction_members', tags=['Connective'])
 async def post_faction_member(body:PostFactionMember):
     return utils.faction_members_table.post_data(body)
 
-@app.post('/residents')
+@app.post('/residents', tags=['Connective'])
 async def post_resident(body:PostResident):
     return utils.residents_table.post_data(body)
 
-@app.post('/history_actor')
+@app.post('/history_actor', tags=['Connective'])
 async def post_history_actor(body:PostInvolvedHistoryActor):
     return utils.history_actor_table.post_data(body)
 
-@app.post('/location_to_faction')
+@app.post('/location_to_faction', tags=['Connective'])
 async def post_location_to_faction(body:PostLocationToFaction):
     return utils.location_to_faction_table.post_data(body)
 
-@app.post('/history_location')
+@app.post('/history_location', tags=['Connective'])
 async def post_history_location(body:PostInvolvedHistoryLocation):
     return utils.history_location_table.post_data(body)
 
-@app.post('/history_faction')
+@app.post('/history_faction', tags=['Connective'])
 async def post_history_faction(body:PostHistoryFaction):
     return utils.history_faction_table.post_data(body)
 
-@app.post('/history_object')
+@app.post('/history_object', tags=['Connective'])
 async def post_history_object(body:PostHistoryObject):
     return utils.history_object_table.post_data(body)
 
-@app.post('/history_world_data')
+@app.post('/history_world_data', tags=['Connective'])
 async def post_history_world_data(body:PostHistoryWorldData):
     return utils.history_world_data_table.post_data(body)
 
-@app.post('/object_to_owner')
+@app.post('/object_to_owner', tags=['Connective'])
 async def post_object_to_owner(body:PostObjectToOwner):
     return utils.object_to_owner_table.post_data(body)

@@ -54,6 +54,14 @@ tags_metadata = [
     {
         'name': 'World Data',
         'description': 'World Data is lore that is constant eg: magic exists.'
+    },
+    {
+        'name': 'Connective',
+        'description': 'Connective tables help weave the web of data.'
+    },
+    {
+        'name': 'Utility',
+        'description': 'Utility endpoints are general tools.'
     }
 ]
 
