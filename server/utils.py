@@ -235,6 +235,7 @@ class InteractiveTable(Pg_Table):
         """Function takes in data and updates the proper row of the database. It returns a number of rows updated."""
         data_returned = []
         data = dict(data)
+        data['id'] = data['id'] + 1
         current_query = """
             UPDATE {table_name}
         """

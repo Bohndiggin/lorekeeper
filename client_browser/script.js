@@ -17,6 +17,8 @@ let currentOpen = {
     'connective_table': ''
 }
 
+let openTableRows = {}
+
 let orderDataDict = {}
 
 function saveOrderData(data) {
@@ -86,6 +88,8 @@ console.log('listening')
 
 function writeTable(response, endpoint){
     let addButtonArea = document.getElementById('add-one-button')
+    openTableRows = response.data
+    console.log(openTableRows)
     addButtonArea.innerHTML = ''
     currentOpen['table'] = endpoint
     addButtonArea.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" id="add-item" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
@@ -127,15 +131,16 @@ function writeTable(response, endpoint){
     }
 }
 function writeOne(data, idNum) {
+    console.log(idNum)
     currentOpen['item'] = idNum
     let singleDisplay = document.getElementById('single-display')
     singleDisplay.innerHTML = '';
     let { overview, traits, related } = data
-    singleDisplay.innerHTML += '<h2>Overview</h2><ul>'
+    singleDisplay.innerHTML += `<h2>Overview</h2><ul>`
     for (const property in overview) {
         singleDisplay.innerHTML += `<li><b>${formatNormal(property)}:</b> ${overview[property]}</li>`
     }
-    singleDisplay.innerHTML += '</ul>'
+    singleDisplay.innerHTML += `</ul><div id='edit-${idNum}' class='add-btn-centered'></div>`
     singleDisplay.innerHTML += '<h2>Traits</h2>'
     for (const property in traits) {
         singleDisplay.innerHTML += `<h3>${formatNormal(property)}</h3><ul>`
@@ -169,8 +174,21 @@ function writeOne(data, idNum) {
             currentOpen['connective_table'] = property
             let tableNameTarget = property + "_table"
             tableNameTarget = tableNameTarget.replace('__', '_')
-            popupBuilderArbiter(tableNameTarget)
+            popupBuilderArbiter(tableNameTarget, null)
         }
+    }
+    let editButton = document.getElementById(`edit-${idNum}`)
+    editButton.onclick = event => {
+        let tempTable = currentOpen['table'].slice(1) + '_table'
+        tempTable = tempTable.replace('__', '_')
+        let tempTarget = 0
+        for (let i = 0;i<openTableRows.length;i++) {
+            if (openTableRows[i].id == idNum) {
+                tempTarget = i
+            }
+        }
+        console.log("TEMP TARGET: " + tempTarget)
+        popupBuilderArbiter(tempTable, tempTarget) // BROKEN NEEDS TO HAVE actual ID not row on page
     }
 }
 function sendOneSignal(endpoint, idNum) {
@@ -184,7 +202,9 @@ function sendSignal(endpoint) {
     singleDisplay.innerHTML = '';
     const dmdmsconn = "";
     axios.get(dmdmsconn + endpoint)
-        .then((response) => writeTable(response, endpoint))
+        .then((response) => {
+            writeTable(response, endpoint)
+        })
         .catch((error) => console.log(error))
 }
 
@@ -292,21 +312,21 @@ async function getConnectiveData(key) {
         .catch(err => console.log(err))
 }
 
-function inputBoxBuilder(dataNameStr) {
+function inputBoxBuilder(dataNameStr, initialValue) {
     let htmlString = `<label for="${dataNameStr}">${formatNormal(dataNameStr)}</label>`
-    htmlString += `<input type="text" id="${dataNameStr}-input" placeholder='${dataNameStr}' value='${dataNameStr}'/>`
+    htmlString += `<input type="text" id="${dataNameStr}-input" placeholder='${dataNameStr}' value='${initialValue}'/>`
     return htmlString
 }
 
-function inputBoxBuilderNum(dataNameStr) {
+function inputBoxBuilderNum(dataNameStr, initialValue) {
     let htmlString = `<label for="${dataNameStr}">${formatNormal(dataNameStr)}</label>`
-    htmlString += `<input type="number" id="${dataNameStr}-input" placeholder='${dataNameStr}' value='0'/>`
+    htmlString += `<input type="number" id="${dataNameStr}-input" placeholder='${dataNameStr}' value='${initialValue}'/>`
     return htmlString
 }
 async function queryConnectiveAndEndcap(value) {}
 
 
-async function extraDataQuerier(currentRequested) {
+async function extraDataQuerier(currentRequested, itemNum) {
     let htmlWork = ``
     for (const [key, value] of Object.entries(currentRequested['foreign_keyed'])) {
         if (value[1] == 'id') {
@@ -325,7 +345,8 @@ async function extraDataQuerier(currentRequested) {
 }
 
 
-async function popupBuilderArbiter(tableSelected) {
+async function popupBuilderArbiter(tableSelected, itemNum) {
+    console.log('ITEM NUM' + itemNum)
     tableSelected = tableSelected.replace('-', '_')
     let popUpWindow = document.getElementById('popup')
     let currentRequested = tableData[tableSelected]
@@ -337,8 +358,8 @@ async function popupBuilderArbiter(tableSelected) {
     <div class="popup", id='popupbkg2'>
         <div class="popup" id="popup-window">
             <div class="popup" id="popup-content">
-                <h2>CONNECT TO</h2>
-                <form class="popup right" id='popup-right' method="POST">
+                <h2>Add/Edit</h2>
+                <form class="popup right" id='popup-right'>
     `
     try {
         let listKeys = []
@@ -348,20 +369,29 @@ async function popupBuilderArbiter(tableSelected) {
         }
         listKeys = sortIt(orderDataDict[tableSelected], listKeys)
         for (const key in listKeys) {
-            if (key.includes('_id')){
+            if (key.includes('_id')) {
                 continue
             }
-            if (currentRequested['non_foreign'][key] == 'integer'){
-                htmlString += inputBoxBuilderNum(key)
-                continue
+            if (currentRequested['non_foreign'][key] == 'integer') {
+                if (itemNum == null) {
+                    htmlString += inputBoxBuilderNum(key, 0)
+                    continue
+                } else {
+                    htmlString += inputBoxBuilderNum(key, openTableRows[itemNum][key]) // LOOK UP What num is supposed to be
+                }
             }
-            htmlString += inputBoxBuilder(key)
+            if (itemNum == null) {
+                htmlString += inputBoxBuilder(key, key)
+                continue
+            } else {
+                htmlString += inputBoxBuilder(key, openTableRows[itemNum][key])
+            }
         }
     } catch (error) {
         console.log(error)
     }
     try {
-        htmlString += await extraDataQuerier(currentRequested)
+        htmlString += await extraDataQuerier(currentRequested, itemNum)
     } catch (error) {
         console.log(error)
     }
@@ -381,6 +411,7 @@ async function popupBuilderArbiter(tableSelected) {
     let formData = {}
     form.addEventListener('submit', event => {
         event.preventDefault()
+        console.log(itemNum)
         //loop through and get values of all strings
         for (const [key, value] of Object.entries(currentRequested['non_foreign'])) {
             if (key.includes('_id')){
@@ -403,23 +434,34 @@ async function popupBuilderArbiter(tableSelected) {
         const loreconn = "/";
         console.log(formData)
         let targetEndpoint = tableSelected.replace('_table', '')
-        axios.post(loreconn + targetEndpoint, data=formData)
+        if (itemNum == null) {
+            axios.post(loreconn + targetEndpoint, data=formData)
+            .then(response => {
+            console.log(response)
+            })
+            .catch(error => {
+                console.log(error)
+            });
+        } else {
+            formData['id'] = itemNum
+            axios.put(loreconn + targetEndpoint, data=formData)
             .then(response => {
                 console.log(response)
             })
             .catch(error => {
                 console.log(error)
-            });
+            })
+        }
         sendSignal(currentOpen['table'])
-        closeAddingWindow()
-    })
+            closeAddingWindow()
+        })
     return htmlString
 }
 
 function addButtonTopFunction() {
     let table = currentOpen['table'].slice(1) + '_table'
     table = table.replace('__', '_')
-    popupBuilderArbiter(table)
+    popupBuilderArbiter(table, null)
 }
 
 function sortIt(orderedExampleList, toSortList) {
