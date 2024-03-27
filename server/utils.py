@@ -231,6 +231,31 @@ class InteractiveTable(Pg_Table):
         answer = query_to_answer(query, query_object)
         return answer[0]
 
+    def put_data(self, data):
+        """Function takes in data and updates the proper row of the database. It returns a number of rows updated."""
+        data_returned = []
+        data = dict(data)
+        current_query = """
+            UPDATE {table_name}
+        """
+        current_query += 'SET '
+        set_query = ''
+        for key, value in data.items():
+            if value == None:
+                continue
+            set_query += f'{key}'
+            set_query += ' = '
+            set_query += '{'+key+'}, '
+        current_query += set_query[:-2]
+        current_query += "\n WHERE id = {id};"
+        for key, value in data.items():
+            data[key] = sql.Literal(value)
+        current_query = sql.SQL(current_query)
+        current_query = current_query.format(table_name=sql.Identifier(self.table_name), **data)
+        print(current_query)
+        data_returned += make_curs_query_commit(current_query)
+        return data_returned
+
     def delete_row(self, id:int):
         """Function takes in an id and deletes the row with the matching id. It returns a sucess/fail"""
         query = """

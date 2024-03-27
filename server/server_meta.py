@@ -128,6 +128,35 @@ class ActorPostRequest(BaseModel):
         }
     }
 
+class ActorPutRequest(BaseModel):
+    id: int
+    first_name: str | None = None
+    middle_name: str | None = None
+    last_name: str | None = None
+    title: str | None = None
+    actor_age: int | None = None
+    class_id: int | None = None
+    actor_level: int | None = None
+    background_id: int | None = None
+    job: str | None = None
+    actor_role: str | None = None
+    race_id: int | None = None
+    sub_race_id: int | None = None
+    alignment: str | None = None
+    strength: int | None = None
+    dexterity: int | None = None
+    constitution: int | None = None
+    intelligence: int | None = None
+    wisdom: int | None = None
+    charisma: int | None = None
+    ideal: str | None = None
+    bond: str | None = None
+    flaw: str | None = None
+    appearance: str | None = None
+    strengths: str | None = None
+    weaknesses: str | None = None
+    notes: str | None = None
+
 class FactionPostRequest(BaseModel):
     faction_name: str
     faction_description: str
@@ -151,6 +180,15 @@ class FactionPostRequest(BaseModel):
         }
     }
 
+class FactionPutRequest(BaseModel):
+    id: int
+    faction_name: str | None = None
+    faction_description: str | None = None
+    goals: str | None = None
+    faction_values: str | None = None
+    faction_income_sources: str | None = None
+    faction_expenses: str | None = None
+
 class LocationPostRequest(BaseModel):
     location_name: str
     location_type: str
@@ -162,20 +200,50 @@ class LocationPostRequest(BaseModel):
     tastes: str
     coordinates: str
 
-class HistoricalFragmentsRequest(BaseModel):
+class LocationPutRequest(BaseModel):
+    id: int
+    location_name: str | None = None
+    location_type: str | None = None
+    location_description: str | None = None
+    sights: str | None = None
+    smells: str | None = None
+    sounds: str | None = None
+    feels: str | None = None
+    tastes: str | None = None
+    coordinates: str | None = None
+
+class HistoryPostRequest(BaseModel):
     event_name: str
     event_year: int
     event_description: str
 
-class ObjectRequest(BaseModel):
+class HistoryPutRequest(BaseModel):
+    id: int
+    event_name: str | None = None
+    event_year: int | None = None
+    event_description: str | None = None
+
+class ObjectPostRequest(BaseModel):
     object_name: str
     object_description: str
     object_value: int
     rarity: str
 
-class WorldDataRequest(BaseModel):
+class ObjectPutRequest(BaseModel):
+    id: int
+    object_name: str | None = None
+    object_description: str | None = None
+    object_value: int | None = None
+    rarity: str | None = None
+
+class WorldDataPostRequest(BaseModel):
     data_name: str
     data_description: str
+
+class WorldDataPutRequest(BaseModel):
+    id: int
+    data_name: str | None = None
+    data_description: str | None = None
 
 class PostDataRequest(BaseModel):
     currentOpen: dict

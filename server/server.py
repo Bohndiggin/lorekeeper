@@ -56,6 +56,8 @@ app.add_middleware(
 async def homepage():
     pass
 
+# ACTOR
+
 @app.get("/actor", tags=['Actors'])
 async def actor_get():
     return utils.actor_table.query_get_10()
@@ -72,13 +74,15 @@ async def actor_get_names():
 async def actor_get_one(id:int = 0):
     return utils.actor_table.query_one_by_id(id)
 
+@app.put('/actor', tags=['Actors'])
+async def actor_put(body: ActorPutRequest):
+    return utils.actor_table.put_data(body)
+
 @app.delete('/actor/', tags=['Actors'])
 async def actor_delete_one(id:int):
     return utils.actor_table.delete_row_w_dependancies(id)
 
-@app.post('/actor/', tags=['Actors'])
-async def actor_post_related(body):
-    return body
+# FACTION
 
 @app.get('/faction', tags=['Faction'])
 async def faction_get():
@@ -96,9 +100,15 @@ async def faction_get_names():
 async def faction_get_one(id:int = 0):
     return utils.faction_table.query_one_by_id(id)
 
+@app.post('/faction', tags=['Faction'])
+async def faction_put(body:FactionPutRequest):
+    return utils.faction_table.put_data(body)
+
 @app.delete('/faction/', tags=['Faction'])
 async def faction_delete_one(id:int):
     return utils.faction_table.delete_row_w_dependancies(id)
+
+# LOCATION
 
 @app.get('/location', tags=['Location'])
 async def location_get():
@@ -116,21 +126,22 @@ async def location_get_names():
 async def location_get_one(id:int = 0):
     return utils.location_table.query_one_by_id(id)
 
+@app.put('/location', tags=['Location'])
+async def location_put(body:LocationPutRequest):
+    return utils.location_table.put_data(body)
+
 @app.delete('/location/', tags=['Location'])
 async def loctaion_delete_one(id:int):
     return utils.location_table.delete_row_w_dependancies(id)
 
-@app.get('/residents-post', tags=['Location'])
-async def resident_post_one(location_id):
-    print(location_id)
-    return location_id
+# HISTORY
 
 @app.get('/history', tags=['Historical Fragments'])
 async def history_get():
     return utils.history_table.query_get_10()
 
 @app.post('/history', tags=['Historical Fragments'])
-async def historical_fregments_post(body:HistoricalFragmentsRequest):
+async def historical_fregments_post(body:HistoryPostRequest):
     return utils.history_table.post_data(body)
 
 @app.get('/history-names', tags=['Historical Fragments'])
@@ -141,12 +152,18 @@ async def history_get_names():
 async def history_get_one(id:int = 0):
     return utils.history_table.query_one_by_id(id)
 
+@app.put('/history', tags=['Historical Fragments'])
+async def history_put(body:HistoryPutRequest):
+    return utils.history_table.put_data(body)
+
+# OBJECT
+
 @app.get('/object', tags=['Objects'])
 async def object_get():
     return utils.object_table.query_get_10()
 
 @app.post('/object', tags=['Objects'])
-async def object_post(body:ObjectRequest):
+async def object_post(body:ObjectPostRequest):
     return utils.object_table.post_data(body)
 
 @app.get('/object-names', tags=['Objects'])
@@ -157,25 +174,37 @@ async def object_get_names():
 async def object_get_one(id:int = 0):
     return utils.object_table.query_one_by_id(id)
 
+@app.put('/object', tags=['Objects'])
+async def object_put(body:ObjectPutRequest):
+    return utils.object_table.put_data(body)
+
 @app.delete('/object/', tags=['Objects'])
 async def object_delete_by_id(id:int):
     return utils.object_table.delete_row(id)
+
+# WORLD DATA
 
 @app.get('/world-data', tags=['World Data'])
 async def world_data_get():
     return utils.world_data_table.query_get_10()
 
-@app.get('/world-data/', tags=['World Data'])
-async def world_data_get_one(id:int = 0):
-    return utils.world_data_table.query_one_by_id(id)
-
 @app.post('/world-data', tags=['World Data'])
-async def world_data_post(body:WorldDataRequest):
+async def world_data_post(body:WorldDataPostRequest):
     return utils.world_data_table.post_data(body)
 
 @app.get('/world-data-names', tags=['World Data'])
 async def world_data_get_names():
     return utils.world_data_table.get_all_named()
+
+@app.get('/world-data/', tags=['World Data'])
+async def world_data_get_one(id:int = 0):
+    return utils.world_data_table.query_one_by_id(id)
+
+@app.put('/world-data', tags=['World Data'])
+async def world_data_put(body:WorldDataPutRequest):
+    return utils.world_data_table.put_data(body)
+
+# UTILS
 
 @app.post('/query-endcaps', tags=['Utility'])
 async def get_endcap_data(body:GetEndcapDataRequest):
