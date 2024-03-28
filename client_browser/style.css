@@ -224,3 +224,10 @@ tr:hover {
 td:hover, th:hover {
     background-color: #f3d69d;
 }
+
+.edit-btn-centered {
+    display: flex;
+    width: 100%;
+    height: 75px;
+    justify-content: center;
+}
