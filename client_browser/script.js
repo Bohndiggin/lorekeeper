@@ -335,7 +335,7 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
             if (key.includes('_id')) {
                 continue
             }
-            if (currentRequested['non_foreign'][key] == 'integer') {
+            if (currentRequested['non_foreign'][key] == 'integer' || currentRequested['non_foreign'][key] == "double precision") {
                 if (itemNum == null) {
                     htmlString += inputBoxBuilderNum(key, 0)
                     continue
@@ -401,7 +401,7 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
         }
         const loreconn = "/";
         console.log(formData)
-        let targetEndpoint = tableSelected.replace('_table', '')
+        let targetEndpoint = tableSelected.replace('_table', '').replace('_', '-')
         if (itemNum == null) {
             axios.post(loreconn + targetEndpoint, data=formData)
             .then(response => {
