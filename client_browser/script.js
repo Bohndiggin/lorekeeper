@@ -239,6 +239,7 @@ function storeTables(dict) {
     tableData = dict.data
     console.log('TABLE DATA LOADED')
     console.log(tableData)
+    sendSignal('/actor')
 }
 
 function loadTables() {
@@ -443,4 +444,4 @@ function sortIt(orderedExampleList, toSortList) {
 loadOrderData()
 loadTables()
 
-sendSignal('/actor')
+
