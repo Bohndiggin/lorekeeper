@@ -360,14 +360,16 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
     }
 
 
-    htmlString += `<input type='submit' id='popup-submit' value='Submit'></form></div></div></div>`
+    htmlString += `<input type='submit' id='popup-submit' value='Submit' id='popup-submit'></form></div></div></div>`
     popUpWindow.innerHTML = htmlString
-    for (const [key, value] of Object.entries(currentRequested['foreign_keyed'])) {
-        if(value[1] == 'id') {
-            continue
+    if (itemNum != null) {
+        for (const [key, value] of Object.entries(currentRequested['foreign_keyed'])) {
+            if(value[1] == 'id') {
+                continue
+            }
+            let tempSelection = document.getElementById('selection-'+value[1])
+            tempSelection.selectedIndex = parseInt(openTableRows[itemNum][key]) - 1
         }
-        let tempSelection = document.getElementById('selection-'+value[1])
-        tempSelection.selectedIndex = parseInt(openTableRows[itemNum][key]) - 1
     }
     let popupBackground = document.getElementById('popupbkg')
     popupBackground.onclick = ev => {
