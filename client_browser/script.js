@@ -101,11 +101,11 @@ function writeTable(response, endpoint){
     let displayArea = document.getElementById('object-display')
     displayArea.innerHTML = ''
     let keys = Object.keys(response.data[0])
-    let tableHTML = `<table><tr>`
+    let tableHTML = `<table id="myTable" class="display"><tr><thead>`
     for (let j = 0;j<keys.length;j++) {
         tableHTML += `<th>${keys[j]}</th>`
     }
-    tableHTML += `</tr>`
+    tableHTML += `</tr></thead><tbody>`
     for (let i = 0;i<response.data.length;i++) {
         let values = Object.values(response.data[i])
         tableHTML += `<tr>`
@@ -117,7 +117,7 @@ function writeTable(response, endpoint){
         }
         tableHTML += `</tr>`
     }
-    tableHTML += `</table>`
+    tableHTML += `</tbody></table>`
     displayArea.innerHTML = tableHTML
     displayArea.innerHTML += '</div>'
     for (let i = 0;i<response.data.length;i++){
@@ -402,7 +402,8 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
         }
         const loreconn = "/";
         console.log(formData)
-        let targetEndpoint = tableSelected.replace('_table', '').replace('_', '-')
+        let targetEndpoint = tableSelected.replace('_table', '').replace(/_/g, '-')
+        console.log(targetEndpoint)
         if (itemNum == null) {
             axios.post(loreconn + targetEndpoint, data=formData)
             .then(response => {

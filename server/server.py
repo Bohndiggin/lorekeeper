@@ -220,7 +220,7 @@ async def load_table_data():
 
 # CONNECTIVE TABLES
 
-@app.post('/faction_members', tags=['Connective'])
+@app.post('/faction-members', tags=['Connective'])
 async def post_faction_member(body:PostFactionMember):
     return utils.faction_members_table.post_data(body)
 
@@ -228,30 +228,30 @@ async def post_faction_member(body:PostFactionMember):
 async def post_resident(body:PostResident):
     return utils.residents_table.post_data(body)
 
-@app.post('/history_actor', tags=['Connective'])
+@app.post('/history-actor', tags=['Connective'])
 async def post_history_actor(body:PostInvolvedHistoryActor):
     return utils.history_actor_table.post_data(body)
 
-@app.post('/location_to_faction', tags=['Connective'])
+@app.post('/location-to-faction', tags=['Connective'])
 async def post_location_to_faction(body:PostLocationToFaction):
     return utils.location_to_faction_table.post_data(body)
 
-@app.post('/history_location', tags=['Connective'])
+@app.post('/history-location', tags=['Connective'])
 async def post_history_location(body:PostInvolvedHistoryLocation):
     return utils.history_location_table.post_data(body)
 
-@app.post('/history_faction', tags=['Connective'])
+@app.post('/history-faction', tags=['Connective'])
 async def post_history_faction(body:PostHistoryFaction):
     return utils.history_faction_table.post_data(body)
 
-@app.post('/history_object', tags=['Connective'])
+@app.post('/history-object', tags=['Connective'])
 async def post_history_object(body:PostHistoryObject):
     return utils.history_object_table.post_data(body)
 
-@app.post('/history_world_data', tags=['Connective'])
+@app.post('/history-world-data', tags=['Connective'])
 async def post_history_world_data(body:PostHistoryWorldData):
     return utils.history_world_data_table.post_data(body)
 
-@app.post('/object_to_owner', tags=['Connective'])
+@app.post('/object-to-owner', tags=['Connective'])
 async def post_object_to_owner(body:PostObjectToOwner):
     return utils.object_to_owner_table.post_data(body)
