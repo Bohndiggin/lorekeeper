@@ -59,23 +59,6 @@ def clean_table(table_name:str) -> str:
     no_dunder = with_table.replace('__', '_')
     return no_dunder
 
-# def recieve_connective_post(body:PostDataRequest):
-#     target_table = clean_endpoint(body.currentOpen['table'])
-#     target_a = body.currentOpen['item']
-#     target_connection = clean_table(body.currentOpen['connective_table'])
-#     target_b = body.selectedId
-#     query_attempt = [
-#         target_table,
-#         target_a,
-#         target_connection,
-#         target_b
-#     ]
-#     print(query_attempt)
-#     print(all_tables[target_table])
-#     print(all_tables[target_table].connective_table_dict[target_connection].table_name)
-#     all_tables[target_table].call_connected_table(all_tables[target_table].connective_table_dict[target_connection], target_a, target_b)
-#     return [body, 'sucess']
-
 def get_endcaps(body):
     pass
 
