@@ -147,7 +147,8 @@ function writeOne(data, idNum) {
     currentOpen['item'] = idNum
     let singleDisplay = document.getElementById('single-display')
     singleDisplay.innerHTML = '';
-    let { overview, traits, related } = data
+    let { overview, selfConnective, traits, related } = data
+    console.log(selfConnective)
     singleDisplay.innerHTML += `<h2>Overview</h2><ul>`
     for (const property in overview) {
         singleDisplay.innerHTML += `<li><b>${formatNormal(property)}:</b> ${overview[property]}</li>`
@@ -166,6 +167,25 @@ function writeOne(data, idNum) {
         singleDisplay.innerHTML += `</ul>`
     }
     singleDisplay.innerHTML += '<h2>Related</h2><ul>'
+    for (const property in selfConnective) {
+        singleDisplay.innerHTML += `<h3>${formatNormal(property)}</h3><ul>`
+        let currentTrait = selfConnective[property] // this is where we'll ask for a name to make a card?
+        console.log(currentTrait)
+        for (let i = 0;i<currentTrait.length;i++) {
+            let currentItem = currentTrait[i]
+            for (const j in currentItem) {
+                singleDisplay.innerHTML += `<li><b>${formatNormal(j)}:</b> ${currentItem[j]}</li>`
+                let tempButton = document.getElementById(`${property}-${j}`)
+                // console.log(tempButton)
+                tempButton.onclick = event => {
+                    console.log('clicked!')
+                    let tempEndpoint = relationMap[currentOpen['table_endpoint']][property]
+                    console.log(tempEndpoint)
+                }
+            }
+        }
+        singleDisplay.innerHTML += `</ul>`
+    }
     for (const property in related) {
         singleDisplay.innerHTML += `<h3>${formatNormal(property)}</h3><ul>`
         let currentProperty = related[property] //this is where we'll ask for an event name to make the card

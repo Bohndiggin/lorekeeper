@@ -317,7 +317,7 @@ class QueryableTable(InteractiveTable):
         """Function finds everything associated with a single item and returns a dictionary"""
         answer = {}
         answer['overview'] = self.single_item_table_query(id)
-        answer['self-connective'] = self.multi_self_connected_query(id)
+        answer['selfConnective'] = self.multi_self_connected_query(id)
         answer['traits'] = self.multi_dual_query(id)
         answer['related'] = self.multi_tri_query(id)
         return answer
