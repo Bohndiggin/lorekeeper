@@ -340,7 +340,7 @@ async function foreignDataQuerier(currentRequested, itemNum) {
             console.log('wabba')
             let returnedData = await getConnectiveData(actualValue[0]).then(data => {return data})
             htmlWork += dropdownBuilder('', returnedData.data, actualValue[0])
-        } else if (actualValue[1] != currentOpen['table_endpoint'].slice(1) + '_id') {
+        } else if (actualValue[0] != currentOpen['table_endpoint'].slice(1) + '_id') {
             let returnedData = await getEndcapData(actualValue[0]).then(data => {return data})
             htmlWork += dropdownBuilder('', returnedData, actualValue[0], itemNum)
         }

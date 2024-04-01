@@ -157,17 +157,11 @@ class InteractiveTable(Pg_Table):
         return dict_results
 
     def get_item_name(self, id:int) -> str:
-        query = """
-            SELECT x.{proper_name} FROM {table_name} x
-            WHERE x.id = {id};
-        """
-        query_object = {
-            'item_name': sql.Identifier(self.proper_name),
-            'table_name': sql.Identifier(self.table_name),
-            'id': sql.Literal(id)
-        }
-        answer = query_to_answer(query, query_object)
-        return answer[0]
+        proper_name_var = getattr(self.table_type, self.proper_name)
+        query = select(self.table_type, proper_name_var).where(self.table_type.id == id)
+        with Session() as session:
+            result = session.execute(query).all()
+        return result[0][1]
 
     def put_data(self, data):
         """Function takes in data and updates the proper row of the database. It returns a number of rows updated."""
@@ -180,12 +174,10 @@ class InteractiveTable(Pg_Table):
 
     def delete_row(self, id:int):
         """Function takes in an id and deletes the row with the matching id. It returns a sucess/fail"""
-        query = """
-                DELETE FROM {table_name}
-                WHERE id = {id};
-        """
-        query = sql.SQL(query).format(table_name=sql.Identifier(self.table_name), id=sql.Literal(id))
-        return make_curs_query_commit(query)
+        with Session() as session:
+            row = session.query(self.table_type).filter(self.table_type.id == id).first()
+            session.delete(row)
+            session.commit()
 
 class BackgroundTable(Pg_Table):
     """Parent class for tables that will not be directly influenced by the user."""
@@ -342,12 +334,12 @@ class QueryableTable(InteractiveTable):
         post_data[self.foreign_key_name] = self_id
         return selected_table.post_data(post_data)
 
-    def delete_row_w_dependancies(self, foreign_key:str, id:int):
+    def delete_row_w_dependancies(self, id:int):
         """Function finds everything related to a row in a table and deletes them then the row in the table itself"""
-        for i in self.self_connective_table_list:
-            i.multi_delete(foreign_key, id)
-        for i in self.connective_table_list:
-            i.multi_delete(self.foreign_key_name, id)
+        # # for i in self.self_connective_table_list:
+        # #     i.multi_delete(foreign_key, id)
+        # for i in self.connective_table_list:
+        #     i.multi_delete(self.foreign_key_name, id)
         self.delete_row(id)
 
 class_table = EndCapTable(Class_, "class", 'class_id', 'class_name')
