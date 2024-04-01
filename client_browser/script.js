@@ -98,7 +98,7 @@ function writeTable(response, endpoint){
     openTableRows = response.data
     addButtonArea.innerHTML = ''
     let tableDunder = endpoint.slice(1) + '_table'
-    currentOpen['table'] = tableDunder.replace('__', '_')
+    currentOpen['table'] = tableDunder.replace('__', '_').replace('-', '_')
     currentOpen['table_endpoint'] = endpoint
     addButtonArea.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" id="add-item" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -148,7 +148,8 @@ function writeOne(data, idNum) {
     let singleDisplay = document.getElementById('single-display')
     singleDisplay.innerHTML = '';
     let { overview, selfConnective, traits, related } = data
-    console.log(selfConnective)
+    overview = sortDictToList(orderDataDict[currentOpen['table']], overview)
+    overview = listToDict(overview)
     singleDisplay.innerHTML += `<h2>Overview</h2><ul>`
     for (const property in overview) {
         singleDisplay.innerHTML += `<li><b>${formatNormal(property)}:</b> ${overview[property]}</li>`
@@ -174,9 +175,8 @@ function writeOne(data, idNum) {
         for (let i = 0;i<currentTrait.length;i++) {
             let currentItem = currentTrait[i]
             for (const j in currentItem) {
-                singleDisplay.innerHTML += `<li><b>${formatNormal(j)}:</b> ${currentItem[j]}</li>`
+                singleDisplay.innerHTML += `<li id='${property}-${j}'><b>${formatNormal(j)}:</b> ${currentItem[j]}</li>`
                 let tempButton = document.getElementById(`${property}-${j}`)
-                // console.log(tempButton)
                 tempButton.onclick = event => {
                     console.log('clicked!')
                     let tempEndpoint = relationMap[currentOpen['table_endpoint']][property]
@@ -331,17 +331,18 @@ async function queryConnectiveAndEndcap(value) {}
 
 async function foreignDataQuerier(currentRequested, itemNum) {
     let htmlWork = ``
-    for (const [key, value] of Object.entries(currentRequested['foreign_keyed'])) {
-        if (value[1] == 'id') {
+    for (const value of currentRequested['foreign_keyed']) {
+        let actualValue = Object.entries(value)[0]
+        if (value.value == 'id') {
             continue
         }
-        if (!value[1].includes('_id')) {
+        if (!actualValue[0].includes('_id')) {
             console.log('wabba')
-            let returnedData = await getConnectiveData(value[1]).then(data => {return data})
-            htmlWork += dropdownBuilder('', returnedData.data, value[1])
-        } else if (value[1] != currentOpen['table_endpoint'].slice(1) + '_id') {
-            let returnedData = await getEndcapData(value[1]).then(data => {return data})
-            htmlWork += dropdownBuilder('', returnedData, value[1], itemNum)
+            let returnedData = await getConnectiveData(actualValue[0]).then(data => {return data})
+            htmlWork += dropdownBuilder('', returnedData.data, actualValue[0])
+        } else if (actualValue[1] != currentOpen['table_endpoint'].slice(1) + '_id') {
+            let returnedData = await getEndcapData(actualValue[0]).then(data => {return data})
+            htmlWork += dropdownBuilder('', returnedData, actualValue[0], itemNum)
         }
     }
     return htmlWork
@@ -366,7 +367,7 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
     `
     try {
         let listKeys = []
-        for (const [key, value] of Object.entries(currentRequested['non_foreign'])) { //refactor to make it build number input boxes
+        for (const key of currentRequested['non_foreign']) { //refactor to make it build number input boxes
             // console.log(key)
             listKeys.push(key)
         }
@@ -375,12 +376,13 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
             if (key.includes('_id')) {
                 continue
             }
-            if (currentRequested['non_foreign'][key] == 'integer' || currentRequested['non_foreign'][key] == "double precision") {
+            if (currentRequested['non_foreign'][key] == 'INTEGER' || currentRequested['non_foreign'][key] == "FLOAT") {
                 if (itemNum == null) {
                     htmlString += inputBoxBuilderNum(key, 0)
                     continue
                 } else {
                     htmlString += inputBoxBuilderNum(key, openTableRows[itemNum][key]) // LOOK UP What num is supposed to be
+                    continue
                 }
             }
             if (itemNum == null) {
@@ -388,6 +390,7 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
                 continue
             } else {
                 htmlString += inputBoxBuilder(key, openTableRows[itemNum][key])
+                continue
             }
         }
     } catch (error) {
@@ -403,12 +406,13 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
     htmlString += `<input type='submit' id='popup-submit' value='Submit' id='popup-submit'></form></div></div></div>`
     popUpWindow.innerHTML = htmlString
     if (itemNum != null) {
-        for (const [key, value] of Object.entries(currentRequested['foreign_keyed'])) {
-            if(value[1] == 'id') {
+        for (const value of currentRequested['foreign_keyed']) {
+            let actualValue = Object.entries(value)[0]
+            if(actualValue[0] == 'id') {
                 continue
             }
-            let tempSelection = document.getElementById('selection-'+value[1])
-            tempSelection.selectedIndex = parseInt(openTableRows[itemNum][key]) - 1
+            let tempSelection = document.getElementById('selection-'+actualValue[0])
+            tempSelection.selectedIndex = parseInt(openTableRows[itemNum][actualValue[0]]) - 1
         }
     }
     let popupBackground = document.getElementById('popupbkg')
@@ -482,12 +486,13 @@ function sortIt(orderedExampleList, toSortList) {
     return result
 }
 
-// function sortRows(rows) {
-//     result = []
-//     for (let i = 0;i<rows.length;i++) {
-//         result.push(rows[rows.index])
-//     }
-// }
+function listToDict(list) {
+    result = {}
+    for (let i = 0;i<list.length;i++) {
+        result[list[i][0]] = list[i][1]
+    }
+    return result
+}
 
 function sortDictToList(orderedExampleList, toSortDict) {
     result = []

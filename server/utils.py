@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 from server.server_meta import *
 from server.database.engine import *
 from sqlalchemy.orm import sessionmaker, aliased
-from sqlalchemy import update, select, inspect
+from sqlalchemy import update, select
+from sqlalchemy.inspection import inspect
 
 
 load_dotenv()
@@ -97,10 +98,18 @@ class Pg_Table:
 
     def get_columns(self) -> list:
         """Function to get a list of columns so you can make sure user is supplying all the needed data"""
-        inspector = inspect(engine)
-        columns = inspector.get_columns(self.table_name)
-        columns_and_types = {column['name']: str(column['type']) for column in columns}
-        return columns_and_types
+        inspector = inspect(self.table_type)
+        # columns = inspector.get_columns(self.table_name)
+        column_types = {}
+        column_types['foreign_keyed'] = []
+        column_types['non_foreign'] = []
+        for column in inspector.columns:
+            if column.foreign_keys:
+                column_types['foreign_keyed'].append({column.name: str(column.type)})
+            else:
+                column_types['non_foreign'].append({column.name: str(column.type)})
+        print(column_types)
+        return column_types
 
 class InteractiveTable(Pg_Table):
     """Parent class for tables that will be directly interacted with by the user."""
