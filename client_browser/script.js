@@ -14,12 +14,19 @@ worldDataButton.onclick = ev => {sendSignal('/world-data')};
 let currentOpen = {
     'table': '',
     'item': 0,
-    'connective_table': ''
+    'connective_table': '',
+    'table_endpoint': ''
 }
 
 let openTableRows = {}
 
 let orderDataDict = {}
+
+// function cleanEscape(string) {
+//     string = string.replace(' ', '')
+//     string = string.replace('__', '_')
+//     return string
+// }
 
 function saveOrderData(data) {
     // console.log(data)
@@ -89,9 +96,10 @@ console.log('listening')
 function writeTable(response, endpoint){
     let addButtonArea = document.getElementById('add-one-button')
     openTableRows = response.data
-    console.log(openTableRows)
     addButtonArea.innerHTML = ''
-    currentOpen['table'] = endpoint
+    let tableDunder = endpoint.slice(1) + '_table'
+    currentOpen['table'] = tableDunder.replace('__', '_')
+    currentOpen['table_endpoint'] = endpoint
     addButtonArea.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" id="add-item" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
@@ -100,38 +108,42 @@ function writeTable(response, endpoint){
     addButton.onclick = ev => {addButtonTopFunction()} // Button will bring up form to fill out for the table. Query for data needed??
     let displayArea = document.getElementById('object-display')
     displayArea.innerHTML = ''
-    let keys = Object.keys(response.data[0])
+    let tablesSorted = []
+    for (let i = 0;i<response.data.length;i++) {
+        let tempRow = [['id', response.data[i]['id']]]
+        tempRow = tempRow.concat(sortDictToList(orderDataDict[currentOpen['table']], response.data[i]))
+        tablesSorted.push(tempRow)
+    }
     let tableHTML = `<table id="myTable" class="display"><tr><thead>`
-    for (let j = 0;j<keys.length;j++) {
-        tableHTML += `<th>${keys[j]}</th>`
+    for (let i = 0;i<tablesSorted[0].length;i++) {
+        tableHTML += `<th>${tablesSorted[0][i][0]}</th>`
     }
     tableHTML += `</tr></thead><tbody>`
-    for (let i = 0;i<response.data.length;i++) {
-        let values = Object.values(response.data[i])
+    for (let i = 0;i<tablesSorted.length;i++) {
+        let values = tablesSorted[i]
         tableHTML += `<tr>`
-        let idClean = values[1]
-        idClean = idClean.split(' ').join('').replace('"', '').replace(`'`, '')
-        tableHTML += `<td><button id='${values[0]}-${idClean}'>${values[0]}</button></td>`
+        let idClean = values[1][1]
+        tableHTML += `<td><button id='${values[0][1]}-${idClean}'>${values[0][1]}</button></td>`
         for (let j = 1;j<values.length;j++){
-            tableHTML += `<td>${values[j]}</td>`
+            tableHTML += `<td>${values[j][1]}</td>`
         }
         tableHTML += `</tr>`
     }
     tableHTML += `</tbody></table>`
+    tableHTML += '</div>'
     displayArea.innerHTML = tableHTML
-    displayArea.innerHTML += '</div>'
-    for (let i = 0;i<response.data.length;i++){
-        let values = Object.values(response.data[i])
-        let idClean = values[1].split(' ').join('').replace('"', '').replace(`'`, '')
-        let buttonTemp = document.getElementById(`${values[0]}-${idClean}`)
-        let idNum = values[0]
+    for (let i = 0;i<tablesSorted.length;i++){
+        let values = tablesSorted[i]
+        let idClean = values[1][1]
+        let buttonTemp = document.getElementById(`${values[0][1]}-${idClean}`)
+        let idNum = values[0][1]
         buttonTemp.onclick = ev => {
             sendOneSignal(`${endpoint}/?id=${idNum}`, idNum)
         }
     }
 }
 function writeOne(data, idNum) {
-    console.log(idNum)
+    // console.log(idNum)
     currentOpen['item'] = idNum
     let singleDisplay = document.getElementById('single-display')
     singleDisplay.innerHTML = '';
@@ -162,10 +174,10 @@ function writeOne(data, idNum) {
             for (const j in currentItem) {
                 singleDisplay.innerHTML += `<li id='${property}-${j}'><b>${formatNormal(j)}:</b> ${currentItem[j]}</li>`
                 let tempButton = document.getElementById(`${property}-${j}`)
-                console.log(tempButton)
+                // console.log(tempButton)
                 tempButton.onclick = event => {
                     console.log('clicked!')
-                    let tempEndpoint = relationMap[currentOpen['table']][property]
+                    let tempEndpoint = relationMap[currentOpen['table_endpoint']][property]
                     console.log(tempEndpoint)
                 }
             }
@@ -188,16 +200,14 @@ function writeOne(data, idNum) {
     }
     let editButton = document.getElementById(`edit-${idNum}`)
     editButton.onclick = event => {
-        let tempTable = currentOpen['table'].slice(1) + '_table'
-        tempTable = tempTable.replace('__', '_')
         let tempTarget = 0
         for (let i = 0;i<openTableRows.length;i++) {
             if (openTableRows[i].id == idNum) {
                 tempTarget = i
             }
         }
-        console.log("TEMP TARGET: " + tempTarget)
-        popupBuilderArbiter(tempTable, tempTarget) // BROKEN NEEDS TO HAVE actual ID not row on page
+        // console.log("TEMP TARGET: " + tempTarget)
+        popupBuilderArbiter(currentOpen['table'], tempTarget)
     }
 }
 function sendOneSignal(endpoint, idNum) {
@@ -279,7 +289,7 @@ async function getEndcapData(key) {
 
 async function getConnectiveData(key) {
     const loreconn = "";
-    let endpoint = relationMap[currentOpen['table']][currentOpen['connective_table']];
+    let endpoint = relationMap[currentOpen['table_endpoint']][currentOpen['connective_table']];
     return await axios.get(loreconn + endpoint)
         .then(data => {return data})
         .catch(err => console.log(err))
@@ -309,7 +319,7 @@ async function foreignDataQuerier(currentRequested, itemNum) {
             console.log('wabba')
             let returnedData = await getConnectiveData(value[1]).then(data => {return data})
             htmlWork += dropdownBuilder('', returnedData.data, value[1])
-        } else if (value[1] != currentOpen['table'].slice(1) + '_id') {
+        } else if (value[1] != currentOpen['table_endpoint'].slice(1) + '_id') {
             let returnedData = await getEndcapData(value[1]).then(data => {return data})
             htmlWork += dropdownBuilder('', returnedData, value[1], itemNum)
         }
@@ -319,12 +329,12 @@ async function foreignDataQuerier(currentRequested, itemNum) {
 
 
 async function popupBuilderArbiter(tableSelected, itemNum) {
-    console.log('ITEM NUM' + itemNum)
+    // console.log('ITEM NUM' + itemNum)
     tableSelected = tableSelected.replace('-', '_')
     let popUpWindow = document.getElementById('popup')
     let currentRequested = tableData[tableSelected]
-    console.log(tableSelected)
-    console.log(currentRequested)
+    // console.log(tableSelected)
+    // console.log(currentRequested)
     htmlString = `
     <div class="popup", id='popupbkg'>
     </div>
@@ -337,7 +347,7 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
     try {
         let listKeys = []
         for (const [key, value] of Object.entries(currentRequested['non_foreign'])) { //refactor to make it build number input boxes
-            console.log(key)
+            // console.log(key)
             listKeys.push(key)
         }
         listKeys = sortIt(orderDataDict[tableSelected], listKeys)
@@ -389,8 +399,9 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
     let formData = {}
     form.addEventListener('submit', event => {
         event.preventDefault()
-        console.log(itemNum)
+        // console.log(itemNum)
         //loop through and get values of all strings
+        formData['id'] = currentOpen['item']
         for (const [key, value] of Object.entries(currentRequested['non_foreign'])) {
             if (key.includes('_id')){
                 continue
@@ -399,9 +410,10 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
         }
         for (const [key, value] of Object.entries(currentRequested['foreign_keyed'])) {
             if (key == 'id') {
+                formData[key] = value
                 continue
             }
-            if (key == currentOpen['table'].replace('/', '').replace('_table', '') + '_id') {
+            if (key == currentOpen['table_endpoint'].slice(1) + '_id') {
                 console.log('key found')
                 formData[key] = currentOpen['item']
                 continue
@@ -410,9 +422,9 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
             formData[key] = parseInt(document.getElementById('selection-' + key).value)
         }
         const loreconn = "/";
-        console.log(formData)
+        // console.log(formData)
         let targetEndpoint = tableSelected.replace('_table', '').replace(/_/g, '-')
-        console.log(targetEndpoint)
+        // console.log(targetEndpoint)
         if (itemNum == null) {
             axios.post(loreconn + targetEndpoint, data=formData)
             .then(response => {
@@ -431,16 +443,14 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
                 console.log(error)
             })
         }
-        sendSignal(currentOpen['table'])
+        sendSignal(currentOpen['table_endpoint'])
             closeAddingWindow()
         })
     return htmlString
 }
 
 function addButtonTopFunction() {
-    let table = currentOpen['table'].slice(1) + '_table'
-    table = table.replace('__', '_')
-    popupBuilderArbiter(table, null)
+    popupBuilderArbiter(currentOpen['table'], null)
 }
 
 function sortIt(orderedExampleList, toSortList) {
@@ -451,6 +461,22 @@ function sortIt(orderedExampleList, toSortList) {
     }
     return result
 }
+
+// function sortRows(rows) {
+//     result = []
+//     for (let i = 0;i<rows.length;i++) {
+//         result.push(rows[rows.index])
+//     }
+// }
+
+function sortDictToList(orderedExampleList, toSortDict) {
+    result = []
+    for (let i = 0;i<orderedExampleList.length;i++) {
+        result.push([orderedExampleList[i], toSortDict[orderedExampleList[i]]])
+    }
+    return result
+}
+
 loadOrderData()
 loadTables()
 

@@ -5,11 +5,19 @@ import os, csv
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from server.server_meta import *
+from server.database.engine import *
+from sqlalchemy.orm import sessionmaker, aliased
+from sqlalchemy import update, select, inspect
+
 
 load_dotenv()
 
 db_url = os.getenv('DATABASE_URL')
 generic_select_query = sql.SQL('SELECT * FROM {} LIMIT 10;')
+
+Session = sessionmaker(bind=engine)
+# session = Session()
+
 
 all_tables: dict['Pg_Table'] = {}
 
@@ -25,6 +33,7 @@ def unpack_answer(answer) -> list:
     for row in answer:
         answers_list.append(dict(row))
     return answers_list
+
 
 def make_curs_and_query(query:sql.SQL) -> dict:
     with pg.connect(db_url) as conn:
@@ -64,100 +73,39 @@ def get_endcaps(body):
 
 class Pg_Table:
     """Basic Table Parent Class"""
-    def __init__(self, table_name:str, table_id_name:str='id') -> None:
+    def __init__(self, table_type, table_name:str, table_id_name:str='id') -> None:
+        self.table_type = table_type
         self.table_name = table_name
-        self.columns = self._find_column_names(self.table_name)
-        post_query_variables = str(tuple(self.columns)).replace("\'", "")
-        self.post_query = self._build_post_query(post_query_variables)
-        # self.select_10_query = generic_select_query.format(self.table_name)
         self.table_id_name = table_id_name
-        table_name_var_name = table_name + '_table'
-        self.table_name_no_dunder = table_name_var_name.replace('__', '_')
-        all_tables[self.table_name_no_dunder] =  self
+        temp_name = table_name + '_table'
+        self.table_name_no_dunder = temp_name.replace('__', '_')
+        all_tables[self.table_name_no_dunder] = self
 
-    def _find_column_names(self, table_name:str) -> list:
-        """Queries the database and gets the column names sans the id then returns them as a list (minus the ID)"""
-        conn = pg.connect(db_url)
-        curs = conn.cursor()
-        curs.execute(f"SELECT * FROM {table_name} LIMIT 0;")
-        column_names = [desc[0] for desc in curs.description]
-        curs.close()
-        conn.close()
-        return column_names[1:]
-
-    def _build_post_query(self, post_query_variables) -> sql.SQL:
-        """Private Function builds out the default/template query for posting data"""
-        post_query_values_named = ''
-        for i in self.columns :
-            post_query_values_named += '{'
-            post_query_values_named += i
-            post_query_values_named += "}, "
-        post_query_values_named = post_query_values_named[:-2]
-        query_full = f"""
-            INSERT INTO {self.table_name} {post_query_variables}
-            VALUES ({post_query_values_named})
-        """
-        query_SQL = sql.SQL(query_full)
-        return query_SQL
+    def clean_response_multi(self, response:list) -> list[dict]:
+        results_list = [row[0].__dict__ for row in response]
+        for i in results_list:
+            i.pop('_sa_instance_state')
+        return results_list
 
     def post_data(self, data) -> list:
         """This Function uses the build_insert_query sql.SQL and a dict with keywords to add a row to the database"""
-        data_returned = []
-        data = dict(data)
-        current_query = self.post_query
-        for key, value in data.items():
-            data[key] = sql.Literal(value)
-        current_query = current_query.format(**data)
-        data_returned += make_curs_query_commit(current_query)
-        return data_returned
+        data_dict = dict(data)
+        new_row = self.table_type(**data_dict)
+        with Session() as session:
+            session.add(new_row)
+            session.commit()
 
     def get_columns(self) -> list:
         """Function to get a list of columns so you can make sure user is supplying all the needed data"""
-        """TODO add data types."""
-        conn = pg.connect(db_url)
-        with pg.connect(db_url) as conn:
-            curs = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-            curs.execute("""
-                select cols.column_name, cols.data_type, cols.table_name, kcu.column_name
-                FROM information_schema.columns cols
-                LEFT JOIN information_schema.table_constraints tc
-                    ON cols.table_name = tc.table_name
-                    AND cols.table_schema = tc.table_schema
-                LEFT JOIN information_schema.key_column_usage kcu
-                    ON tc.constraint_name = kcu.constraint_name
-                    AND tc.table_schema = kcu.table_schema
-                LEFT JOIN information_schema.constraint_column_usage ccu
-                    ON ccu.constraint_name = tc.constraint_name
-                where cols.table_schema NOT IN ('information_schema', 'pg_catalog')
-                order by cols.table_schema, cols.table_name;"""
-            )
-            columns_and_types = {}
-            columns_and_types['foreign_keyed'] = {}
-            for row in curs:
-                if row['table_name'] == self.table_name:
-                    if row['column_name']:
-                        columns_and_types['foreign_keyed'][row['column_name']] = [row['data_type'], row['column_name']]
-
-            curs.execute("""
-                SELECT *
-                    FROM information_schema.columns cols
-                    LEFT JOIN information_schema.table_constraints tc
-                    ON cols.table_name = tc.table_name
-                    AND cols.table_schema = tc.table_schema
-                    where cols.table_schema NOT IN ('information_schema', 'pg_catalog')
-                    order by cols.table_schema, cols.table_name;
-            """)
-            columns_and_types['non_foreign'] = {}
-            for row in curs:
-                if row['table_name'] == self.table_name and str(row['column_name']) not in columns_and_types['foreign_keyed'].keys():
-                    columns_and_types['non_foreign'][row['column_name']] = [row['data_type']]
-            conn.commit()
+        inspector = inspect(engine)
+        columns = inspector.get_columns(self.table_name)
+        columns_and_types = {column['name']: str(column['type']) for column in columns}
         return columns_and_types
 
 class InteractiveTable(Pg_Table):
     """Parent class for tables that will be directly interacted with by the user."""
-    def __init__(self, table_name: str, proper_name:str, foreign_key_name:str, table_id_name: str = 'id') -> None:
-        super().__init__(table_name, table_id_name)
+    def __init__(self, table_type,  table_name: str, proper_name:str, foreign_key_name:str, table_id_name: str = 'id') -> None:
+        super().__init__(table_type, table_name, table_id_name)
         self.proper_name = proper_name
         self.foreign_key_name = foreign_key_name
 
@@ -170,36 +118,34 @@ class InteractiveTable(Pg_Table):
         return query_full, query_full_object
 
     def single_item_table_query(self, id:int) -> dict:
-        query = """
-            SELECT * FROM {sql_table_name} x
-            WHERE x.id = {sql_id};
-        """
-        query = sql.SQL(query).format(sql_table_name = sql.Identifier(self.table_name), sql_id = sql.Literal(id))
-        answer = make_curs_and_query(query)
-        return answer
+        """Function to query for one row based on the id."""
+        query = select(self.table_type).where(self.table_type.id == id)
+        with Session() as session:
+            result = session.execute(query).all()[0][0]
+            dict_results = result.__dict__
+            dict_results.pop('_sa_instance_state')
+        return dict_results
 
     def query_get_10(self) -> list:
         """Function queries and returns the first 10 of a table. TODO make it able to get next 10"""
-        name_object = sql.Identifier(self.table_name)
-        query = generic_select_query.format(name_object)
-        answer = make_curs_and_query(query)
-        answers = unpack_answer(answer)
-        return answers
+        with Session() as session:
+            results = session.query(self.table_type).limit(10).all()
+            dict_results = [row.__dict__ for row in results]
+            for i in dict_results:
+                i.pop('_sa_instance_state')
+        return dict_results
 
     def get_all_named(self) -> list[dict]:
         """Function returns a list of every item in the table, proper name only"""
-        query = """
-            SELECT x.id, x.{proper_name} FROM {table_name} x;
-        """
-        query_object = {
-            'proper_name': sql.Identifier(self.proper_name),
-            'table_name': sql.Identifier(self.table_name)
-        }
-        answer = query_to_answer(query, query_object)
-        for i in answer:
+        with Session() as session:
+            results = session.query(self.table_type).all()
+            dict_results = [row.__dict__ for row in results]
+        for i in dict_results:
+            i.pop('_sa_instance_state')
+        for i in dict_results:
             i['proper_name'] = i[self.proper_name]
             del i[self.proper_name]
-        return answer
+        return dict_results
 
     def get_item_name(self, id:int) -> str:
         query = """
@@ -216,29 +162,12 @@ class InteractiveTable(Pg_Table):
 
     def put_data(self, data):
         """Function takes in data and updates the proper row of the database. It returns a number of rows updated."""
-        data_returned = []
         data = dict(data)
         data['id'] = data['id'] + 1
-        current_query = """
-            UPDATE {table_name}
-        """
-        current_query += 'SET '
-        set_query = ''
-        for key, value in data.items():
-            if value == None:
-                continue
-            set_query += f'{key}'
-            set_query += ' = '
-            set_query += '{'+key+'}, '
-        current_query += set_query[:-2]
-        current_query += "\n WHERE id = {id};"
-        for key, value in data.items():
-            data[key] = sql.Literal(value)
-        current_query = sql.SQL(current_query)
-        current_query = current_query.format(table_name=sql.Identifier(self.table_name), **data)
-        print(current_query)
-        data_returned += make_curs_query_commit(current_query)
-        return data_returned
+        with Session() as session:
+            session.execute(update(self.table_type), [data])
+            session.commit()
+
 
     def delete_row(self, id:int):
         """Function takes in an id and deletes the row with the matching id. It returns a sucess/fail"""
@@ -251,39 +180,35 @@ class InteractiveTable(Pg_Table):
 
 class BackgroundTable(Pg_Table):
     """Parent class for tables that will not be directly influenced by the user."""
-    def __init__(self, table_name: str, table_id_name: str = 'id') -> None:
-        super().__init__(table_name, table_id_name)
+    def __init__(self, table_type, table_name: str, table_id_name: str = 'id') -> None:
+        super().__init__(table_type, table_name, table_id_name)
 
     def delete_row_with_id(self, id:int):
         pass
 
 class ConnectiveTable(BackgroundTable):
-    def __init__(self, table_name: str, first_table:'QueryableTable', second_table:'QueryableTable',  table_id_name: str = 'id') -> None:
-        super().__init__(table_name, table_id_name)
+    def __init__(self, table_type, table_name: str, first_table:'QueryableTable', second_table:'QueryableTable',  table_id_name: str = 'id') -> None:
+        super().__init__(table_type, table_name, table_id_name)
         self.first_table = first_table
         self.second_table = second_table
 
     def query_three_tables(self, foreign_id_str:str, id:int) -> tuple[list, str]:
         """Function queries 3 tables, Left Middle and Right. It returns a value(the answer) and a key(the middle table name)"""
-        query = """
-            SELECT y.id, z.{right_proper_name}, y.{left_proper_name}, x.* FROM {middle_table_name} x
-            JOIN {left_table_name} y ON x.{left_table_foreign_key_str} = y.id
-            JOIN {right_table_name} z ON x.{right_table_foreign_key_str} = z.id
-            WHERE {foreign_id_str} = {id};
-        """
-        query_object = {
-            'right_proper_name': sql.Identifier(self.second_table.proper_name),
-            'left_proper_name': sql.Identifier(self.first_table.proper_name),
-            'middle_table_name': sql.Identifier(self.table_name),
-            'left_table_name': sql.Identifier(self.first_table.table_name),
-            'left_table_foreign_key_str': sql.Identifier(self.first_table.foreign_key_name),
-            'right_table_name': sql.Identifier(self.second_table.table_name),
-            'right_table_foreign_key_str': sql.Identifier(self.second_table.foreign_key_name),
-            'foreign_id_str': sql.Identifier(foreign_id_str),
-            'id': sql.Literal(id)
-        }
-        answer = query_to_answer(query, query_object)
-        return answer, self.table_name
+        proper_name_first_table = getattr(self.first_table.table_type, self.first_table.proper_name)
+        proper_name_second_table = getattr(self.second_table.table_type, self.second_table.proper_name)
+        query = select(self.table_type, proper_name_first_table, proper_name_second_table).join(self.second_table.table_type).join(self.first_table.table_type)
+        with Session() as session:
+            result = session.execute(query).all()
+        answer = self.clean_response_multi(result)
+        parsed_answer = []
+        for i in range(len(answer)):
+            if answer[i][foreign_id_str] == id:
+                temp_dict = {}
+                temp_dict[self.first_table.proper_name] = result[i][1]
+                temp_dict[self.second_table.proper_name] = result[i][2]
+                answer_dict = dict(temp_dict, **answer[i])
+                parsed_answer.append(answer_dict)
+        return parsed_answer, self.table_name
 
     def multi_delete(self, foreign_id_str:str, foreign_id:int):
         """Function takes in an id and deletes the row with the matching id. It returns a sucess/fail"""
@@ -295,34 +220,48 @@ class ConnectiveTable(BackgroundTable):
         return make_curs_query_commit(query)
 
 class SelfConnectiveTable(ConnectiveTable):
-    def __init__(self, table_name: str, first_table: 'QueryableTable', second_table: 'QueryableTable', foreign_keys:list, table_id_name: str = 'id') -> None:
-        super().__init__(table_name, first_table, second_table, table_id_name)
+    def __init__(self, table_type, table_name: str, first_table: 'QueryableTable', second_table: 'QueryableTable', foreign_keys:list, table_id_name: str = 'id') -> None:
+        super().__init__(table_type, table_name, first_table, second_table, table_id_name)
         self.foreign_keys = foreign_keys
+        self.first_table_proper_name = getattr(self.first_table.table_type, self.first_table.proper_name)
+        self.second_table_id_proper_name = getattr(self.second_table.table_type, self.second_table.proper_name)
 
     def query_connected(self, id:int):
-        query = """
-            SELECT * FROM {table_name} x
-            JOIN {connected_table} y ON y.id = x.{foreign_key_1}
-            JOIN {connected_table} z ON z.id = x.{foreign_key_2}
-            WHERE x.{foreign_key_1} = {id};
-        """
-        query_object = {
-            'table_name': sql.Identifier(self.table_name),
-            'connected_table': sql.Identifier(self.first_table.table_name),
-            'foreign_key_1': sql.Identifier(self.foreign_keys[0]),
-            'foreign_key_2': sql.Identifier(self.foreign_keys[1]),
-            'id': sql.Literal(id)
-        }
-        answer = query_to_answer(query, query_object)
-        return answer, self.table_name
+        # Create an alias for the faction table
+        FactionB = aliased(self.second_table.table_type)
+
+        # Build the query
+        query = select(self.table_type, self.first_table.table_type.faction_name, FactionB.faction_name).\
+            select_from(
+                self.table_type.__table__.join(self.first_table.table_type, self.table_type.faction_a_id == self.first_table.table_type.id).\
+                join(FactionB, self.table_type.faction_b_id == FactionB.id)
+            ).\
+            where(self.table_type.faction_a_id == id)
+
+        # Execute query
+        with Session() as session:
+            result = session.execute(query).all()
+
+        # Clean answer
+        answer = self.clean_response_multi(result)
+        parsed_answer = []
+        for i in range(len(answer)):
+            if answer[i]['id'] == id:
+                temp_dict = {}
+                temp_dict[self.first_table.proper_name] = result[i][1]
+                temp_dict[self.second_table.proper_name] = result[i][2]
+                answer_dict = dict(temp_dict, **answer[i])
+                parsed_answer.append(answer_dict)
+
+        return parsed_answer, self.table_name
 
 class EndCapTable(InteractiveTable):
-    def __init__(self, table_name: str, foreign_key_name: str, proper_name: str, table_id_name: str = 'id') -> None:
-        super().__init__(table_name, proper_name, foreign_key_name, table_id_name)
+    def __init__(self, table_type, table_name: str, foreign_key_name: str, proper_name: str, table_id_name: str = 'id') -> None:
+        super().__init__(table_type, table_name, proper_name, foreign_key_name, table_id_name)
 
 class QueryableTable(InteractiveTable):
-    def __init__(self, table_name: str, foreign_key_name: str, proper_name: str, table_id_name: str = 'id') -> None:
-        super().__init__(table_name, proper_name, foreign_key_name, table_id_name)
+    def __init__(self, table_type,  table_name: str, foreign_key_name: str, proper_name: str, table_id_name: str = 'id') -> None:
+        super().__init__(table_type, table_name, proper_name, foreign_key_name, table_id_name)
         self.endcap_table_list = []
         self.connective_table_list = []
         self.self_connective_table_list = []
@@ -344,19 +283,10 @@ class QueryableTable(InteractiveTable):
 
     def query_two_tables(self, table_2_obj:EndCapTable, id:int) -> tuple[list, str]:
         """Function queries the object's table and one other, an EndCapTable and returns a list of answers and the name of the table queried, as a string"""
-        query = """
-            SELECT x.id, y.* FROM {table_1_name} x
-            JOIN {table_2_name} y ON x.{foreign_key} = y.{table_1_id_name}
-            WHERE x.id = {id};
-        """
-        query_object = {
-            'table_1_name': sql.Identifier(self.table_name),
-            'table_2_name': sql.Identifier(table_2_obj.table_name),
-            'foreign_key': sql.Identifier(table_2_obj.foreign_key_name),
-            'table_1_id_name': sql.Identifier(table_2_obj.table_id_name),
-            'id': sql.Literal(id)
-        }
-        answer = query_to_answer(query, query_object)
+        query = select(table_2_obj.table_type, self.table_type.id).join(table_2_obj.table_type).filter(self.table_type.id == id)
+        with Session() as session:
+            result = session.execute(query).all()
+            answer = self.clean_response_multi(result)
         return answer, table_2_obj.table_name
 
     def multi_dual_query(self, id:int) -> dict:
@@ -366,7 +296,7 @@ class QueryableTable(InteractiveTable):
             value, key = self.query_two_tables(table, id)
             answer_dict[key] = value
         return answer_dict
-    
+
     def multi_tri_query(self, id:int) -> dict:
         """Function runs multiple iterations of query_three_tables and returns a dictionary."""
         answer_dict = {}
@@ -374,7 +304,7 @@ class QueryableTable(InteractiveTable):
             value, key = table.query_three_tables(self.foreign_key_name, id)
             answer_dict[key] = value
         return answer_dict
-    
+
     def multi_self_connected_query(self, id:int) -> dict:
         """Funciton queries the self connected table associated with this object, if any."""
         answer_dict = {}
@@ -386,7 +316,7 @@ class QueryableTable(InteractiveTable):
     def query_one_by_id(self, id:int) -> dict:
         """Function finds everything associated with a single item and returns a dictionary"""
         answer = {}
-        answer['overview'] = self.single_item_table_query(id)[0]
+        answer['overview'] = self.single_item_table_query(id)
         answer['self-connective'] = self.multi_self_connected_query(id)
         answer['traits'] = self.multi_dual_query(id)
         answer['related'] = self.multi_tri_query(id)
@@ -411,35 +341,35 @@ class QueryableTable(InteractiveTable):
             i.multi_delete(self.foreign_key_name, id)
         self.delete_row(id)
 
-class_table = EndCapTable("class", 'class_id', 'class_name')
-background_table = EndCapTable("background", 'background_id', 'background_name')
-race_table = EndCapTable("race", 'race_id', 'race_name')
-sub_race_table = EndCapTable("sub_race", 'sub_race_id', 'sub_race_name')
-actor_table = QueryableTable("actor", 'actor_id', 'first_name')
+class_table = EndCapTable(Class_, "class", 'class_id', 'class_name')
+background_table = EndCapTable(Background, "background", 'background_id', 'background_name')
+race_table = EndCapTable(Race, "race", 'race_id', 'race_name')
+sub_race_table = EndCapTable(SubRace, "sub_race", 'sub_race_id', 'sub_race_name')
+actor_table = QueryableTable(Actor, "actor", 'actor_id', 'first_name')
 
-faction_table = QueryableTable("faction", 'faction_id', 'faction_name')
-faction_a_on_b_relations_table = SelfConnectiveTable("faction_a_on_b_relations", faction_table, faction_table, ['faction_a_id', 'faction_b_id'])
-faction_members_table = ConnectiveTable("faction_members", faction_table, actor_table)
+faction_table = QueryableTable(Faction, "faction", 'faction_id', 'faction_name')
+faction_a_on_b_relations_table = SelfConnectiveTable(FactionAOnBRelations, "faction_a_on_b_relations", faction_table, faction_table, ['faction_a_id', 'faction_b_id'])
+faction_members_table = ConnectiveTable(FactionMembers, "faction_members", faction_table, actor_table)
 
-location_table = QueryableTable('location_', 'location_id', 'location_name')
-location_to_faction_table = ConnectiveTable('location_to_faction', location_table, faction_table)
-location_dungeon_table = ConnectiveTable('location_dungeon', location_table, location_table)
-location_city_table = ConnectiveTable('location_city', location_table, location_table)
-location_city_districts_table = ConnectiveTable('location_city_districts', location_table, location_table)
-residents_table = ConnectiveTable('residents', location_table, actor_table)
+location_table = QueryableTable(Location, 'location_', 'location_id', 'location_name')
+location_to_faction_table = ConnectiveTable(LocationToFaction, 'location_to_faction', location_table, faction_table)
+location_dungeon_table = ConnectiveTable(LocationDungeon, 'location_dungeon', location_table, location_table)
+location_city_table = ConnectiveTable(LocationCity, 'location_city', location_table, location_table)
+location_city_districts_table = ConnectiveTable(LocationCityDistricts, 'location_city_districts', location_table, location_table)
+residents_table = ConnectiveTable(Resident, 'residents', location_table, actor_table)
 location_flora_fauna_table = "table type of end or something. not middle table but bookend typething"
 
-history_table = QueryableTable('history', 'history_id', 'event_name') # TODO CHANGE NAME of table to history? and history_actor ... etc
-history_actor_table = ConnectiveTable('history_actor', history_table, actor_table)
-history_location_table = ConnectiveTable('history_location', history_table, location_table)
-history_faction_table = ConnectiveTable('history_faction', history_table, faction_table)
+history_table = QueryableTable(History, 'history', 'history_id', 'event_name') # TODO CHANGE NAME of table to history? and history_actor ... etc
+history_actor_table = ConnectiveTable(HistoryActor, 'history_actor', history_table, actor_table)
+history_location_table = ConnectiveTable(HistoryLocation, 'history_location', history_table, location_table)
+history_faction_table = ConnectiveTable(HistoryFaction, 'history_faction', history_table, faction_table)
 
-object_table = QueryableTable('object_', 'object_id', 'object_name')
-history_object_table = ConnectiveTable('history_object', object_table, history_table)
-object_to_owner_table = ConnectiveTable('object_to_owner', object_table, actor_table)
+object_table = QueryableTable(Object_, 'object_', 'object_id', 'object_name')
+history_object_table = ConnectiveTable(HistoryObject, 'history_object', object_table, history_table)
+object_to_owner_table = ConnectiveTable(ObjectToOwner, 'object_to_owner', object_table, actor_table)
 
-world_data_table = QueryableTable('world_data', 'world_data_id', 'data_name')
-history_world_data_table = ConnectiveTable('history_world_data', history_table, world_data_table)
+world_data_table = QueryableTable(WorldData, 'world_data', 'world_data_id', 'data_name')
+history_world_data_table = ConnectiveTable(HistoryWorldData, 'history_world_data', history_table, world_data_table)
 
 # Here we connect up the tables
 
