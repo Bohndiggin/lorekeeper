@@ -143,7 +143,7 @@ function writeTable(response, endpoint){
     }
 }
 function writeOne(data, idNum) {
-    // console.log(idNum)
+    console.log(idNum)
     currentOpen['item'] = idNum
     let singleDisplay = document.getElementById('single-display')
     singleDisplay.innerHTML = '';
@@ -354,6 +354,8 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
     tableSelected = tableSelected.replace('-', '_')
     let popUpWindow = document.getElementById('popup')
     let currentRequested = tableData[tableSelected]
+    // console.log('INDEX: ' + currentOpen['item'])
+    // console.log("HUH :" + openTableRows[currentOpen['item']].id)
     // console.log(tableSelected)
     // console.log(currentRequested)
     htmlString = `
@@ -372,11 +374,13 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
             listKeys.push(key)
         }
         listKeys = sortIt(orderDataDict[tableSelected], listKeys)
+        // console.log(listKeys)
         for (const key in listKeys) {
             if (key.includes('_id')) {
                 continue
             }
-            if (currentRequested['non_foreign'][key] == 'INTEGER' || currentRequested['non_foreign'][key] == "FLOAT") {
+            // console.log(key)
+            if (listKeys[key] == 'INTEGER' || listKeys[key] == "FLOAT") {
                 if (itemNum == null) {
                     htmlString += inputBoxBuilderNum(key, 0)
                     continue
@@ -411,7 +415,7 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
             if(actualValue[0] == 'id') {
                 continue
             }
-            let tempSelection = document.getElementById('selection-'+actualValue[0])
+            let tempSelection = document.getElementById('selection-' + actualValue[0])
             tempSelection.selectedIndex = parseInt(openTableRows[itemNum][actualValue[0]]) - 1
         }
     }
@@ -423,27 +427,25 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
     let formData = {}
     form.addEventListener('submit', event => {
         event.preventDefault()
-        // console.log(itemNum)
         //loop through and get values of all strings
         formData['id'] = currentOpen['item']
-        for (const [key, value] of Object.entries(currentRequested['non_foreign'])) {
-            if (key.includes('_id')){
+        for (const value of currentRequested['non_foreign']) {
+            let actualValue = Object.entries(value)[0][0]
+            // console.log(actualValue)
+            if (actualValue.includes('_id') || actualValue == 'id'){
                 continue
             }
-            formData[key] = document.getElementById(key + '-input').value
+            formData[actualValue] = document.getElementById(actualValue + '-input').value
         }
-        for (const [key, value] of Object.entries(currentRequested['foreign_keyed'])) {
-            if (key == 'id') {
-                formData[key] = value
-                continue
-            }
-            if (key == currentOpen['table_endpoint'].slice(1) + '_id') {
+        for (const value of currentRequested['foreign_keyed']) {
+            let actualValue = Object.entries(value)[0][0]
+            if (actualValue == currentOpen['table_endpoint'].slice(1) + '_id') {
                 console.log('key found')
-                formData[key] = currentOpen['item']
+                formData[actualValue] = currentOpen['item']
                 continue
             }
             // console.log(key)
-            formData[key] = parseInt(document.getElementById('selection-' + key).value)
+            formData[actualValue] = parseInt(document.getElementById('selection-' + actualValue).value)
         }
         const loreconn = "/";
         // console.log(formData)
@@ -458,7 +460,7 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
                 console.log(error)
             });
         } else {
-            formData['id'] = itemNum
+            formData['id'] = currentOpen['item']
             axios.put(loreconn + targetEndpoint, data=formData)
             .then(response => {
                 console.log(response)
@@ -480,9 +482,19 @@ function addButtonTopFunction() {
 function sortIt(orderedExampleList, toSortList) {
 
     result = {}
-    for (let i =0;i<orderedExampleList.length;i++) {
-        result[orderedExampleList[i]] = toSortList[toSortList.indexOf(orderedExampleList[i])]
+
+    tempDict = {}
+
+    for (let i = 0;i<toSortList.length;i++) {
+        tempList = Object.entries(toSortList[i])
+        tempDict[tempList[0][0]] = tempList[0][1]
+        // console.log(tempList)
     }
+
+    for (let i =0;i<orderedExampleList.length;i++) {
+        result[orderedExampleList[i]] = tempDict[orderedExampleList[i]]
+    }
+
     return result
 }
 

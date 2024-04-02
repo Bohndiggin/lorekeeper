@@ -108,7 +108,6 @@ class Pg_Table:
                 column_types['foreign_keyed'].append({column.name: str(column.type)})
             else:
                 column_types['non_foreign'].append({column.name: str(column.type)})
-        print(column_types)
         return column_types
 
 class InteractiveTable(Pg_Table):
@@ -166,7 +165,7 @@ class InteractiveTable(Pg_Table):
     def put_data(self, data):
         """Function takes in data and updates the proper row of the database. It returns a number of rows updated."""
         data = dict(data)
-        data['id'] = data['id'] + 1
+        data['id'] = data['id']
         with Session() as session:
             session.execute(update(self.table_type), [data])
             session.commit()
