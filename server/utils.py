@@ -13,7 +13,7 @@ from sqlalchemy.inspection import inspect
 
 load_dotenv()
 
-db_url = os.getenv('DATABASE_URL')
+db_url = os.getenv('CONNSTR')
 generic_select_query = sql.SQL('SELECT * FROM {} LIMIT 10;')
 
 Session = sessionmaker(bind=engine)
