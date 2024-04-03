@@ -20,7 +20,7 @@ def main():
     utils.open_csv_and_query(utils.sub_race_table.build_query(), 'db/sub_races.csv', cur)
 
     utils.open_csv_and_query(utils.actor_table.build_query(), "db/test_data/actors_test.csv", cur)
-    
+
     utils.open_csv_and_query(utils.faction_table.build_query(),"db/test_data/factions_test.csv", cur)
 
     utils.open_csv_and_query(utils.faction_a_on_b_relations_table.build_query(), "db/test_data/faction_relations_test.csv", cur)

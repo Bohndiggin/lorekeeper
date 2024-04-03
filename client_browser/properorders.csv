@@ -2,7 +2,7 @@
 actor_table,first_name,middle_name,last_name,title,actor_age,actor_level,job,actor_role,alignment,strength,dexterity,constitution,intelligence,wisdom,charisma,ideal,bond,flaw,appearance,strengths,weaknesses,notes
 class_table,class_name,class_description,,,,,,,,,,,,,,,,,,,,,,,
 race_table,race_name,race_description,,,,,,,,,,,,,,,,,,,,,,,
-sub_races_table,parent_race_id,sub_race_name,sub_race_description,,,,,,,,,,,,,,,,,,,,,,
+sub_race_table,parent_race_id,sub_race_name,sub_race_description,,,,,,,,,,,,,,,,,,,,,,
 background_table,background_name,background_description,,,,,,,,,,,,,,,,,,,,,,,
 faction_table,faction_name,faction_description,goals,faction_values,faction_income_sources,faction_expenses,,,,,,,,,,,,,,,,,,,
 faction_relations_table,faction_a_id,faction_b_id,overall,economically,politically,opinion,,,,,,,,,,,,,,,,,,,
