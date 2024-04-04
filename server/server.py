@@ -99,7 +99,7 @@ async def faction_get_names():
 async def faction_get_one(id:int = 0):
     return utils.faction_table.query_one_by_id(id)
 
-@app.post('/faction', tags=['Faction'])
+@app.put('/faction', tags=['Faction'])
 async def faction_put(body:FactionPutRequest):
     return utils.faction_table.put_data(body)
 

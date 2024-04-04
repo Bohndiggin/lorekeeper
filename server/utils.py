@@ -259,6 +259,10 @@ class EndCapTable(InteractiveTable):
     def __init__(self, table_type, table_name: str, foreign_key_name: str, proper_name: str, table_id_name: str = 'id') -> None:
         super().__init__(table_type, table_name, proper_name, foreign_key_name, table_id_name)
 
+class MultiEndCapTable(InteractiveTable):
+    def __init__(self, table_type, table_name: str, proper_name: str, foreign_key_name: str, table_id_name: str = 'id') -> None:
+        super().__init__(table_type, table_name, proper_name, foreign_key_name, table_id_name)
+
 class QueryableTable(InteractiveTable):
     def __init__(self, table_type,  table_name: str, foreign_key_name: str, proper_name: str, table_id_name: str = 'id') -> None:
         super().__init__(table_type, table_name, proper_name, foreign_key_name, table_id_name)
@@ -357,7 +361,7 @@ location_dungeon_table = ConnectiveTable(LocationDungeon, 'location_dungeon', lo
 location_city_table = ConnectiveTable(LocationCity, 'location_city', location_table, location_table)
 location_city_districts_table = ConnectiveTable(LocationCityDistricts, 'location_city_districts', location_table, location_table)
 residents_table = ConnectiveTable(Resident, 'residents', location_table, actor_table)
-location_flora_fauna_table = "table type of end or something. not middle table but bookend typething"
+location_flora_fauna_table = MultiEndCapTable(LocationFloraFauna, 'location_flora_fauna', 'living_name', '')
 
 history_table = QueryableTable(History, 'history', 'history_id', 'event_name') # TODO CHANGE NAME of table to history? and history_actor ... etc
 history_actor_table = ConnectiveTable(HistoryActor, 'history_actor', history_table, actor_table)

@@ -345,8 +345,8 @@ function inputBoxBuilder(dataNameStr, initialValue) {
     return htmlString
 }
 
-function inputBoxBuilderNum(dataNameStr, initialValue) {
-    let htmlString = `<label for="${dataNameStr}">${formatNormal(dataNameStr)}</label>`
+function inputBoxBuilderNum(dataNameStr, initialValue, type) {
+    let htmlString = `<label for="${dataNameStr}">${formatNormal(dataNameStr)} (${type}):</label>`
     htmlString += `<input type="number" id="${dataNameStr}-input" placeholder='${dataNameStr}' value='${initialValue}'/>`
     return htmlString
 }
@@ -406,10 +406,10 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
             // console.log(key)
             if (listKeys[key] == 'INTEGER' || listKeys[key] == "FLOAT") {
                 if (itemNum == null) {
-                    htmlString += inputBoxBuilderNum(key, 0)
+                    htmlString += inputBoxBuilderNum(key, 0, listKeys[key])
                     continue
                 } else {
-                    htmlString += inputBoxBuilderNum(key, openTableRows[itemNum][key]) // LOOK UP What num is supposed to be
+                    htmlString += inputBoxBuilderNum(key, openTableRows[itemNum][key], listKeys[key]) // LOOK UP What num is supposed to be
                     continue
                 }
             }

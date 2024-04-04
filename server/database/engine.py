@@ -154,6 +154,8 @@ class Location(Base):
     feels = Column(Text)
     tastes = Column(Text)
     coordinates = Column(String(255))
+    location_flora_fauna = relationship('LocationFloraFauna', back_populates='location_')
+
 
 
 class LocationToFaction(Base):
@@ -209,6 +211,17 @@ class Resident(Base):
 
     actor = relationship('Actor', foreign_keys=[actor_id])
     location = relationship('Location', foreign_keys=[location_id])
+
+class LocationFloraFauna(Base):
+    __tablename__ = 'location_flora_fauna'
+
+    id = Column(Integer, primary_key=True)
+    location_id = Column(Integer, ForeignKey('location_.id'))
+    living_name = Column(String(255))
+    living_description = Column(Text)
+    living_type = Column(Text)
+
+    location_ = relationship('Location', back_populates='location_flora_fauna')
 
 class History(Base):
     __tablename__ = 'history'
