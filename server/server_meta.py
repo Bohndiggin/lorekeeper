@@ -249,8 +249,11 @@ class PostDataRequest(BaseModel):
     currentOpen: dict
     selectedId: int
 
-class GetEndcapDataRequest(BaseModel):
-    targetEndcap: str
+class GetEndDataRequest(BaseModel):
+    targetEnd: str
+
+class GetSelfConnectiveData(BaseModel):
+    targetSelfConnective: str
 
 class PostFactionMember(BaseModel):
     actor_id: int
@@ -292,3 +295,11 @@ class PostHistoryWorldData(BaseModel):
 class PostObjectToOwner(BaseModel):
     object_id: int
     actor_id: int
+
+class PostFactionAOnBRelations(BaseModel):
+    faction_a_id: int
+    faction_b_id: int
+    overall: str
+    opinion: str
+    politically: str
+    economically: str

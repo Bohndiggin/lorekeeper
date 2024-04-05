@@ -205,9 +205,13 @@ async def world_data_put(body:WorldDataPutRequest):
 
 # UTILS
 
-@app.post('/query-endcaps', tags=['Utility'])
-async def get_endcap_data(body:GetEndcapDataRequest):
-    return utils.all_tables[body.targetEndcap].get_all_named()
+@app.post('/query-ends', tags=['Utility'])
+async def get_end_data(body:GetEndDataRequest):
+    return utils.all_tables[body.targetEnd].get_all_named()
+
+@app.post('/query-self-connective', tags=['Utility'])
+async def get_self_connective_data(body:GetSelfConnectiveData):
+    return utils.all_tables[body.targetSelfConnective].get_all_named()
 
 @app.get('/load-tables', tags=['Utility'])
 async def load_table_data():
@@ -254,3 +258,7 @@ async def post_history_world_data(body:PostHistoryWorldData):
 @app.post('/object-to-owner', tags=['Connective'])
 async def post_object_to_owner(body:PostObjectToOwner):
     return utils.object_to_owner_table.post_data(body)
+
+@app.post('/faction-a-on-b-relations', tags=['Connective'])
+async def post_faction_a_on_b_relations(body:PostFactionAOnBRelations):
+    return utils.faction_a_on_b_relations_table.post_data(body)

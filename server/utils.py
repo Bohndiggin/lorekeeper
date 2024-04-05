@@ -243,10 +243,11 @@ class SelfConnectiveTable(ConnectiveTable):
             result = session.execute(query).all()
 
         # Clean answer
+
         answer = self.clean_response_multi(result)
         parsed_answer = []
         for i in range(len(answer)):
-            if answer[i]['id'] == id:
+            if answer[i]['faction_a_id'] == id:
                 temp_dict = {}
                 temp_dict[self.first_table.proper_name] = result[i][1]
                 temp_dict[self.second_table.proper_name] = result[i][2]

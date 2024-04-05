@@ -176,6 +176,9 @@ function writeOne(data, idNum) {
     // RELATED
     tempHTML += '<h2>Related</h2><ul>'
     // SELF- CONNECTIVE
+    console.log('_________')
+    console.log(selfConnective)
+    console.log('_________')
     for (const property in selfConnective) {
         tempHTML += `<h3>${formatNormal(property)}</h3><ul>`
         let currentTrait = selfConnective[property] // this is where we'll ask for a name to make a card?
@@ -191,7 +194,12 @@ function writeOne(data, idNum) {
                 }
                 tempHTML += `<li id='${property}-${j}'><b>${formatNormal(j)}:</b> ${currentItem[j]}</li>`
             }
+            tempHTML += `<br>`
         }
+        tempHTML += `</ul><div id="add-${property}" class='add-btn-centered'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle add-btn-centered" viewBox="0 0 16 16">
+        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+        </svg></div>`
         tempHTML += `</ul>`
     }
     for (const property in related) {
@@ -215,6 +223,17 @@ function writeOne(data, idNum) {
         </svg></div>`
     }
     singleDisplay.innerHTML = tempHTML
+    for (const property in selfConnective) {
+        let addRelatedPropertyTemp = document.getElementById(`add-${property}`)
+        addRelatedPropertyTemp.onclick = ev => {
+            currentOpen['connective_table'] = property
+            let tableNameTarget = property + "_table"
+            tableNameTarget = tableNameTarget.replace('__', '_')
+            console.log("TARGET")
+            console.log(tableNameTarget)
+            popupBuilderArbiter(tableNameTarget, null)
+        }
+    }
     for (const property in related) {
         let currentProperty = related[property]
         for (const i in currentProperty) {
@@ -225,7 +244,7 @@ function writeOne(data, idNum) {
                 }
                 let tempButton = document.getElementById(`${property}-${j}`)
                 // console.log(tempButton)
-                tempButton.onclick = event => {
+                tempButton.onclick = event => { // REPLACE TO OPEN AN EDIT WINDOW
                     let tempEndpoint = relationMap[currentOpen['table_endpoint']][property]
                     let noNames = tempEndpoint.replace('-names', '')
                     sendSignal(noNames)
@@ -319,16 +338,29 @@ function loadTables() {
 async function getEndcapData(key) {
     const loreconn = "";
     let targetTable = key.slice(0, key.length -3) + '_table'
+    // targetTable = targetTable.replace('_a_', '_').replace('_b_', '_')
     // console.log(typeof(targetTable))
     let GetEndcapDataRequest = {
-        'targetEndcap': targetTable
+        'targetEnd': targetTable
     }
     // console.log(GetEndcapDataRequest)
-    return await axios.post(loreconn + '/query-endcaps', GetEndcapDataRequest)
+    return await axios.post(loreconn + '/query-ends', GetEndcapDataRequest)
         .then(response => {
             return response.data;
         })
         .catch(error => console.log(error.response))
+}
+
+async function getSelfConnectiveData(key) {
+    let cleanKey = key.replace('_b_', '_')
+    console.log(cleanKey)
+    let targetTable = cleanKey.replace('_id','_table').replace('__', '_')
+    let GetSelfConnectiveDataRequest = {
+        'targetSelfConnective': targetTable
+    }
+    return await axios.post('/query-self-connective', GetSelfConnectiveDataRequest)
+        .then(response => {return response.data})
+        .catch(error => console.log(error))
 }
 
 async function getConnectiveData(key) {
@@ -350,6 +382,14 @@ function inputBoxBuilderNum(dataNameStr, initialValue, type) {
     htmlString += `<input type="number" id="${dataNameStr}-input" placeholder='${dataNameStr}' value='${initialValue}'/>`
     return htmlString
 }
+
+function inputBoxBuilderFloat(dataNameStr, initialValue, type) {
+    let htmlString = `<label for="${dataNameStr}">${formatNormal(dataNameStr)} (${type}):</label>`
+    htmlString += `<input type="range" step='0.01' id="${dataNameStr}-input" min="0" max="1" value='${initialValue}' oninput="this.nextElementSibling.value = this.value"/>`
+    htmlString += `<output>${initialValue}</output>`
+    return htmlString
+}
+
 async function queryConnectiveAndEndcap(value) {}
 
 
@@ -364,6 +404,11 @@ async function foreignDataQuerier(currentRequested, itemNum) {
             console.log('wabba')
             let returnedData = await getConnectiveData(actualValue[0]).then(data => {return data})
             htmlWork += dropdownBuilder('', returnedData.data, actualValue[0])
+        } else if (actualValue[0].includes('_b_')){
+            let returnedData = await getSelfConnectiveData(actualValue[0]).then(data => {return data})
+            htmlWork += dropdownBuilder('', returnedData, actualValue[0])
+        } else if (actualValue[0].includes('_a_')) {
+            continue
         } else if (actualValue[0] != currentOpen['table_endpoint'].slice(1) + '_id') {
             let returnedData = await getEndcapData(actualValue[0]).then(data => {return data})
             htmlWork += dropdownBuilder('', returnedData, actualValue[0], itemNum)
@@ -397,6 +442,7 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
             // console.log(key)
             listKeys.push(key)
         }
+        console.log(listKeys)
         listKeys = sortIt(orderDataDict[tableSelected], listKeys)
         // console.log(listKeys)
         for (const key in listKeys) {
@@ -404,12 +450,21 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
                 continue
             }
             // console.log(key)
-            if (listKeys[key] == 'INTEGER' || listKeys[key] == "FLOAT") {
+            if (listKeys[key] == 'INTEGER') {
                 if (itemNum == null) {
                     htmlString += inputBoxBuilderNum(key, 0, listKeys[key])
                     continue
                 } else {
                     htmlString += inputBoxBuilderNum(key, openTableRows[itemNum][key], listKeys[key]) // LOOK UP What num is supposed to be
+                    continue
+                }
+            }
+            if (listKeys[key] == "FLOAT") {
+                if (itemNum == null) {
+                    htmlString += inputBoxBuilderFloat(key, 0, listKeys[key])
+                    continue
+                } else {
+                    htmlString += inputBoxBuilderFloat(key, openTableRows[itemNum][key], listKeys[key]) // LOOK UP What num is supposed to be
                     continue
                 }
             }
@@ -469,6 +524,10 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
                 continue
             }
             // console.log(key)
+            if (actualValue.includes('_a_')) {
+                formData[actualValue] = currentOpen['item']
+                continue
+            }
             formData[actualValue] = parseInt(document.getElementById('selection-' + actualValue).value)
         }
         const loreconn = "/";
