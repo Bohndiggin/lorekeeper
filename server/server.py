@@ -227,6 +227,10 @@ async def load_table_data():
 async def post_faction_member(body:PostFactionMember):
     return utils.faction_members_table.post_data(body)
 
+@app.put('/faction-members', tags=['Connective'])
+async def put_faction_member(body):
+    return body
+
 @app.post('/residents', tags=['Connective'])
 async def post_resident(body:PostResident):
     return utils.residents_table.post_data(body)
