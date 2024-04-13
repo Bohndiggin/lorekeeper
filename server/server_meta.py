@@ -261,6 +261,13 @@ class PostFactionMember(BaseModel):
     faction_id: int
     relative_power: int
 
+class PutFactionMember(BaseModel):
+    id: int
+    actor_id: int
+    actor_role: str
+    faction_id: int
+    relative_power: int
+
 class PostResident(BaseModel):
     actor_id: int
     location_id: int

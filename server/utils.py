@@ -191,6 +191,14 @@ class BackgroundTable(Pg_Table):
     def __init__(self, table_type, table_name: str, table_id_name: str = 'id') -> None:
         super().__init__(table_type, table_name, table_id_name)
 
+    def put_data(self, data):
+        """Function takes in data and updates the proper row of the database. It returns a number of rows updated."""
+        data = dict(data)
+        data['id'] = data['id']
+        with Session() as session:
+            session.execute(update(self.table_type), [data])
+            session.commit()
+
     def delete_row_with_id(self, id:int):
         pass
 
