@@ -101,13 +101,21 @@ class Pg_Table:
         inspector = inspect(self.table_type)
         # columns = inspector.get_columns(self.table_name)
         column_types = {}
-        column_types['foreign_keyed'] = []
-        column_types['non_foreign'] = []
         for column in inspector.columns:
             if column.foreign_keys:
-                column_types['foreign_keyed'].append({column.name: str(column.type)})
+                answer_dictionary = {
+                    'key_name': column.name,
+                    'datatype': str(column.type),
+                    'foreign': 'true'
+                    }
+                column_types[column.name] = answer_dictionary
             else:
-                column_types['non_foreign'].append({column.name: str(column.type)})
+                answer_dictionary = {
+                    'key_name': column.name,
+                    'datatype': str(column.type),
+                    'foreign': 'false'
+                    }
+                column_types[column.name] = answer_dictionary
         return column_types
 
 class InteractiveTable(Pg_Table):
