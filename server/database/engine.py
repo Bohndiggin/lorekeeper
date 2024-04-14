@@ -85,6 +85,19 @@ class Actor(Base):
     weaknesses = Column(Text)
     notes = Column(Text)
 
+class ActorAOnBRelations(Base):
+    __tablename__ = 'actor_a_on_b_relations'
+
+    id = Column(Integer, primary_key=True)
+    item_a_id = Column(Integer, ForeignKey('actor.id'))
+    item_b_id = Column(Integer, ForeignKey('actor.id'))
+    overall = Column(String)
+    economically = Column(String)
+    power_dynamic = Column(String)
+
+    actor_a = relationship('Actor', foreign_keys=[item_a_id])
+    actor_b = relationship('Actor', foreign_keys=[item_b_id])
+
 class Skills(Base):
     __tablename__ = 'skills'
 
@@ -118,15 +131,15 @@ class FactionAOnBRelations(Base):
     __tablename__ = 'faction_a_on_b_relations'
 
     id = Column(Integer, primary_key=True)
-    faction_a_id = Column(Integer, ForeignKey('faction.id'))
-    faction_b_id = Column(Integer, ForeignKey('faction.id'))
+    item_a_id = Column(Integer, ForeignKey('faction.id'))
+    item_b_id = Column(Integer, ForeignKey('faction.id'))
     overall = Column(Text)
     economically = Column(Text)
     politically = Column(Text)
     opinion = Column(Text)
 
-    faction_a = relationship('Faction', foreign_keys=[faction_a_id])
-    faction_b = relationship('Faction', foreign_keys=[faction_b_id])
+    faction_a = relationship('Faction', foreign_keys=[item_a_id])
+    faction_b = relationship('Faction', foreign_keys=[item_b_id])
 
 
 class FactionMembers(Base):

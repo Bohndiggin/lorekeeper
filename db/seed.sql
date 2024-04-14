@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS class, background, race, sub_race, actor, skills, actor_to_skills, faction, faction_a_on_b_relations, faction_members, location_, location_to_faction, location_dungeon, location_city, location_city_districts, residents, location_flora_fauna, history, history_actor, history_location, history_faction, object_, history_object, object_to_owner, world_data, history_world_data CASCADE;
+DROP TABLE IF EXISTS class, background, race, sub_race, actor, actor_a_on_b_relations, skills, actor_to_skills, faction, faction_a_on_b_relations, faction_members, location_, location_to_faction, location_dungeon, location_city, location_city_districts, residents, location_flora_fauna, history, history_actor, history_location, history_faction, object_, history_object, object_to_owner, world_data, history_world_data CASCADE;
 
 
 CREATE TABLE class(
@@ -63,6 +63,18 @@ CREATE TABLE actor(
     FOREIGN KEY (sub_race_id) REFERENCES sub_race(id)
 );
 
+CREATE TABLE actor_a_on_b_relations(
+    id SERIAL PRIMARY KEY,
+    item_a_id INT,
+    item_b_id INT,
+    overall TEXT,
+    economically TEXT,
+    power_dynamic TEXT,
+
+    FOREIGN KEY (item_a_id) REFERENCES actor(id),
+    FOREIGN KEY (item_b_id) REFERENCES actor(id)
+);
+
 CREATE TABLE skills(
     id SERIAL PRIMARY KEY,
     skill_name VARCHAR(255),
@@ -92,15 +104,15 @@ CREATE TABLE faction(
 
 CREATE TABLE faction_a_on_b_relations(
     id SERIAL PRIMARY KEY,
-    faction_a_id INT,
-    faction_b_id INT,
+    item_a_id INT,
+    item_b_id INT,
     overall TEXT,
     economically TEXT,
     politically TEXT,
     opinion TEXT,
 
-    FOREIGN KEY (faction_a_id) REFERENCES faction(id),
-    FOREIGN KEY (faction_b_id) REFERENCES faction(id)
+    FOREIGN KEY (item_a_id) REFERENCES faction(id),
+    FOREIGN KEY (item_b_id) REFERENCES faction(id)
 );
 
 CREATE TABLE faction_members(

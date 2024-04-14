@@ -244,15 +244,15 @@ class SelfConnectiveTable(ConnectiveTable):
 
     def query_connected(self, id:int):
         # Create an alias for the faction table
-        FactionB = aliased(self.second_table.table_type)
+        object_b = aliased(self.second_table.table_type)
 
         # Build the query
-        query = select(self.table_type, self.first_table.table_type.faction_name, FactionB.faction_name).\
+        query = select(self.table_type, self.first_table_proper_name, self.second_table_id_proper_name).\
             select_from(
-                self.table_type.__table__.join(self.first_table.table_type, self.table_type.faction_a_id == self.first_table.table_type.id).\
-                join(FactionB, self.table_type.faction_b_id == FactionB.id)
+                self.table_type.__table__.join(self.first_table.table_type, self.table_type.item_a_id == self.first_table.table_type.id).\
+                join(object_b, self.table_type.item_b_id == object_b.id)
             ).\
-            where(self.table_type.faction_a_id == id)
+            where(self.table_type.item_a_id == id)
 
         # Execute query
         with Session() as session:
@@ -263,7 +263,7 @@ class SelfConnectiveTable(ConnectiveTable):
         answer = self.clean_response_multi(result)
         parsed_answer = []
         for i in range(len(answer)):
-            if answer[i]['faction_a_id'] == id:
+            if answer[i]['item_a_id'] == id:
                 temp_dict = {}
                 temp_dict[self.first_table.proper_name] = result[i][1]
                 temp_dict[self.second_table.proper_name] = result[i][2]
@@ -367,6 +367,7 @@ background_table = EndCapTable(Background, "background", 'background_id', 'backg
 race_table = EndCapTable(Race, "race", 'race_id', 'race_name')
 sub_race_table = EndCapTable(SubRace, "sub_race", 'sub_race_id', 'sub_race_name')
 actor_table = QueryableTable(Actor, "actor", 'actor_id', 'first_name')
+actor_a_on_b_relations_table = SelfConnectiveTable(ActorAOnBRelations, 'actor_a_on_b_relations', actor_table, actor_table, ['actor_a_id', 'actor_b_id'])
 
 faction_table = QueryableTable(Faction, "faction", 'faction_id', 'faction_name')
 faction_a_on_b_relations_table = SelfConnectiveTable(FactionAOnBRelations, "faction_a_on_b_relations", faction_table, faction_table, ['faction_a_id', 'faction_b_id'])
@@ -396,6 +397,7 @@ history_world_data_table = ConnectiveTable(HistoryWorldData, 'history_world_data
 
 actor_table.connect_to_endcaps([class_table, background_table, race_table, sub_race_table])
 actor_table.connect_to_connective_tables([faction_members_table, residents_table, history_actor_table])
+actor_table.connect_to_self_connective_tables([actor_a_on_b_relations_table])
 
 
 

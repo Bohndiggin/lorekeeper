@@ -266,3 +266,7 @@ async def post_object_to_owner(body:PostObjectToOwner):
 @app.post('/faction-a-on-b-relations', tags=['Connective'])
 async def post_faction_a_on_b_relations(body:PostFactionAOnBRelations):
     return utils.faction_a_on_b_relations_table.post_data(body)
+
+@app.post('/actor-a-on-b-relations', tags=['Connective'])
+async def post_actor_a_on_b_relations(body:ActorAOnBRelationsPostRequest):
+    return utils.actor_a_on_b_relations_table.post_data(body)

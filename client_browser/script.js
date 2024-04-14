@@ -115,7 +115,7 @@ class PgTable {
     getRelation(tableName) {
         return "name of relation-names"
     }
-    
+
     getRow(rowIdNum) {
         let tempIter = this.rows.values()
         for(let i = 0;i<this.rows.size;i++) {
@@ -216,12 +216,12 @@ function writeTable(response, endpoint){
     for (let i = 0;i<response.data.length;i++) {
         openTableObject.addRow(response.data[i])
     }
-    let tableHTML = `<table id="myTable" class="display"><tr><thead>`
+    let tableHTML = `<table id="myTable" class="display"><thead>`
     tableHTML += `<th>id</th>`
     for (let i = 0;i<openTableObject.tableOrder.length;i++) {
         tableHTML += `<th>${openTableObject.tableOrder[i]}</th>`
     }
-    tableHTML += `</tr></thead><tbody>`
+    tableHTML += `</thead><tbody>`
     let rowIter = openTableObject.rows.values()
     for (let i = 0;i<openTableObject.rows.size;i++) {
         let currentRow = rowIter.next().value
@@ -284,21 +284,24 @@ function writeOne(data, idNum) {
             for (const traitName of workingTableObject.tableOrder) {
                 tempHTML += `<li><b>${formatNormal(traitName)}:</b> ${traitList[i][traitName]}</li>`
             }
+            tempHTML += `<br>`
         }
-        tempHTML += `<br>`
         tempHTML += `</ul><div id="add-${trait}" class='add-btn-centered'><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle add-btn-centered" viewBox="0 0 16 16">
         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
         </svg></div>`
         tempHTML += `</ul>`
     }
-    //RELATED
+    // RELATED (NON SELF CONNECTIVE)
     for (const [trait, traitList] of Object.entries(related)) {
         workingTableObject = tablesObjects[trait]
         tempHTML += `<h3 id='${trait}-list'>${formatNormal(trait)}</h3><ul>`
         for (let i = 0;i<traitList.length;i++){
             workingTableObject.addRow(traitList[i])
             for (const traitName of workingTableObject.tableOrder) {
+                if (traitName.includes('_id')) {
+                    continue
+                }
                 tempHTML += `<li id='${trait}-${i}-${traitName}-list'><b>${formatNormal(traitName)}:</b> ${traitList[i][traitName]}</li>`
             }
             tempHTML += `<br>`
@@ -327,12 +330,13 @@ function writeOne(data, idNum) {
         let targetWorkingTableObject = tablesObjects[trait]
         for (let i = 0;i<traitList.length;i++){
             for (const traitName of targetWorkingTableObject.tableOrder) {
+                if (traitName.includes('id')) {
+                    continue
+                }
                 let tempButton = document.getElementById(`${trait}-${i}-${traitName}-list`)
                 tempButton.onclick = event => {
                     let targetId = traitList[i].id
                     let currentRow = targetWorkingTableObject.getRow(targetId)
-                    console.log(targetWorkingTableObject)
-                    console.log(currentRow)
                     popupBuilderArbiter(trait, currentRow.id)
                 }
             }
@@ -374,6 +378,7 @@ function dropdownBuilder(htmlString, dataList, dataName, itemNum) {
 
 async function getEndcapData(key) {
     let targetTable = key.slice(0, key.length -3) + '_table'
+    // console.log(targetTable)
     let GetEndcapDataRequest = {
         'targetEnd': targetTable
     }
@@ -383,8 +388,8 @@ async function getEndcapData(key) {
 }
 
 async function getSelfConnectiveData(key) {
-    let cleanKey = key.replace('_b_', '_')
-    let targetTable = cleanKey.replace('_id','_table').replace('__', '_')
+    let cleanKey = key + '_table'
+    let targetTable = cleanKey.replace('__', '_')
     let GetSelfConnectiveDataRequest = {
         'targetSelfConnective': targetTable
     }
@@ -433,10 +438,10 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
                 <h2>Add/Edit</h2>
                 <form class="popup right" id='popup-right'>
     `
-    try {
-        for (let i = 0;i<currentRequested.tableOrder.length;i++) {
-            let orderedKey = currentRequested.tableOrder[i]
-            let targetKey = currentRequested.tableKeys[orderedKey]
+    for (let i = 0;i<currentRequested.tableOrder.length;i++) {
+        let orderedKey = currentRequested.tableOrder[i]
+        let targetKey = currentRequested.tableKeys[orderedKey]
+        try {
             if (targetKey.foreign == 'false') {
                 // non-foreign work
                 if (targetKey.datatype == "INTEGER") {
@@ -470,18 +475,20 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
                     let returnedData = await getConnectiveData(targetKey.key_name).then(data => {return data})
                     htmlString += dropdownBuilder('', returnedData.data, targetKey.key_name)
                 } else if (targetKey.key_name.includes('_b_')){
-                    let returnedData = await getSelfConnectiveData(targetKey.key_name).then(data => {return data})
+                    let tempArray = tableSelected.split('_')
+                    let returnedData = await getSelfConnectiveData(tempArray[0]).then(data => {return data})
                     htmlString += dropdownBuilder('', returnedData, targetKey.key_name)
                 } else if (targetKey.key_name.includes('_a_')) {
                     continue
                 } else if (targetKey.key_name != openTableObject.tableName + '_id') {
+                    console.log(targetKey.key_name)
                     let returnedData = await getEndcapData(targetKey.key_name).then(data => {return data})
                     htmlString += dropdownBuilder('', returnedData, targetKey.key_name, itemNum)
                 }
             }
+        } catch (error) {
+            console.log(`Failed to find foreign key of ${orderedKey}, this is likely because it's not needed`)
         }
-    } catch (error) {
-        console.log(error)
     }
     htmlString += `<br><br><input type='submit' id='popup-submit' value='Submit' id='popup-submit'></form></div></div></div><br><br>`
     popUpWindow.innerHTML = htmlString
@@ -489,16 +496,16 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
         for (let i = 0;i<currentRequested.tableOrder.length;i++) {
             let orderedKey = currentRequested.tableOrder[i]
             let targetKey = currentRequested.tableKeys[orderedKey]
-            if (targetKey.foreign == "true") {
-                if (targetKey.key_name == openTableObject.tableName + '_id') {
-                    continue
-                }
-                let tempSelection = document.getElementById('selection-' + targetKey.key_name)
-                try {
+            try {
+                if (targetKey.foreign == "true") {
+                    if (targetKey.key_name == openTableObject.tableName + '_id') {
+                        continue
+                    }
+                    let tempSelection = document.getElementById('selection-' + targetKey.key_name)
                     tempSelection.selectedIndex = openTableObject.getRow(itemNum)['id'] - 1
-                } catch (error) {
-                    console.log(error)
                 }
+            } catch (error) {
+                console.log(`Failed to find foreign key of ${orderedKey}, this is likely because it's not needed`)
             }
         }
     }
@@ -515,29 +522,33 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
         for (let i = 0;i<currentRequested.tableOrder.length;i++) {
             let orderedKey = currentRequested.tableOrder[i]
             let targetKey = currentRequested.tableKeys[orderedKey]
-            let keyName = targetKey.key_name
-            if (targetKey.foreign == 'true') {
-                console.log(keyName)
-                if (keyName == openTableObject.tableName + '_id') {
-                    // if (itemNum == null) {
-                    //     continue
-                    // }
-                    formData[keyName] = openTableObject.getRow(currentRowOpen.id).id
-                    continue
-                } else if (keyName.includes('_a_')) {
-                    formData[keyName] = openTableObject.getRow(currentRowOpen.id).id
-                    continue
-                }
-                let selectionValue = document.getElementById('selection-' + keyName).value
-                formData[keyName] = parseInt(selectionValue)
-            } else {
-                if (targetKey.datatype == "INTEGER") {
-                    formData[keyName] = parseInt(document.getElementById(keyName + '-input').value)
-                } else if (targetKey.datatype == "FLOAT") {
-                    formData[keyName] = parseFloat(document.getElementById(keyName + '-input').value)
+            try {
+                let keyName = targetKey.key_name
+                if (targetKey.foreign == 'true') {
+                    console.log(keyName)
+                    if (keyName == openTableObject.tableName + '_id') {
+                        // if (itemNum == null) {
+                        //     continue
+                        // }
+                        formData[keyName] = openTableObject.getRow(currentRowOpen.id).id
+                        continue
+                    } else if (keyName.includes('_a_')) {
+                        formData[keyName] = openTableObject.getRow(currentRowOpen.id).id
+                        continue
+                    }
+                    let selectionValue = document.getElementById('selection-' + keyName).value
+                    formData[keyName] = parseInt(selectionValue)
                 } else {
-                    formData[keyName] = document.getElementById(keyName + '-input').value
+                    if (targetKey.datatype == "INTEGER") {
+                        formData[keyName] = parseInt(document.getElementById(keyName + '-input').value)
+                    } else if (targetKey.datatype == "FLOAT") {
+                        formData[keyName] = parseFloat(document.getElementById(keyName + '-input').value)
+                    } else {
+                        formData[keyName] = document.getElementById(keyName + '-input').value
+                    }
                 }
+            } catch (error) {
+                console.log(error)
             }
         }
         let targetEndpoint = currentRequested.tableEndpoint.replace('_table', '').replace(/_/g, '-')
@@ -559,7 +570,7 @@ async function popupBuilderArbiter(tableSelected, itemNum) {
             .catch(error => {
                 console.log(error)
             })
-            sendOneSignal(openTableObject.tableEndpoint, currentRowOpen)
+            sendOneSignal(openTableObject.tableEndpoint, itemNum)
         }
         closeAddingWindow()
         })

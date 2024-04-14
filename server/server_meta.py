@@ -180,6 +180,13 @@ class FactionPostRequest(BaseModel):
         }
     }
 
+class ActorAOnBRelationsPostRequest(BaseModel):
+    item_a_id: int
+    item_b_id: int
+    overall: str
+    economically: str
+    power_dynamic: str
+
 class FactionPutRequest(BaseModel):
     id: int
     faction_name: str | None = None
@@ -262,11 +269,11 @@ class PostFactionMember(BaseModel):
     relative_power: int
 
 class PutFactionMember(BaseModel):
-    id: int
-    actor_id: int
-    actor_role: str
-    faction_id: int
-    relative_power: int
+    id: int | None = None
+    actor_id: int | None = None
+    actor_role: str | None = None
+    faction_id: int | None = None
+    relative_power: int | None = None
 
 class PostResident(BaseModel):
     actor_id: int
@@ -304,8 +311,8 @@ class PostObjectToOwner(BaseModel):
     actor_id: int
 
 class PostFactionAOnBRelations(BaseModel):
-    faction_a_id: int
-    faction_b_id: int
+    item_a_id: int
+    item_b_id: int
     overall: str
     opinion: str
     politically: str
