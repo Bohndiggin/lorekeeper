@@ -9,5 +9,6 @@ node_modules/
 client_fvtt/dmdms/.env
 .vscode
 client_browser/.env
+.pytest_cache
 
 .env

@@ -4,8 +4,8 @@ import psycopg2.extras
 import os, csv
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from server.server_meta import *
-from server.database.engine import *
+from lorekeeper.server.server_meta import *
+from lorekeeper.server.database.engine import *
 from sqlalchemy.orm import sessionmaker, aliased
 from sqlalchemy import update, select
 from sqlalchemy.inspection import inspect
