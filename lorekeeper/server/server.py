@@ -3,13 +3,13 @@ import psycopg2 as pg
 import psycopg2.extras
 import os, json
 from datetime import datetime
-import server.utils as utils
+import lorekeeper.server.utils as utils
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from server.server_meta import *
+from lorekeeper.server.server_meta import *
 
 load_dotenv()
 
@@ -36,7 +36,7 @@ app = FastAPI(
     openapi_tags=tags_metadata
 )
 
-app.mount('/main', StaticFiles(directory='./client_browser', html=True), name='dmdms')
+app.mount('/main', StaticFiles(directory='./lorekeeper/client_browser', html=True), name='dmdms')
 
 origins = [
     '*'
